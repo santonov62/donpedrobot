@@ -3,8 +3,15 @@ REQUIREMENTS
 
 INSTALL
 
-`npm i`
+1. `npm i`
+2. `cd bot && npm i`
+3. `cd backoffice && npm i`
+
+ENV
+
+Create bot/.env file and add prop:
+`TOKEN=12345677890:AAAAAABBBBBBBBBBCCCCCCDDDDDDDDDEEEE`
 
 RUN
 
-`TOKEN=12345677890:AAAAAABBBBBBBBBBCCCCCCDDDDDDDDDEEEE node index.js`
+`npm run start`
