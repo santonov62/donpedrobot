@@ -4,13 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start-backend": "cd backend && npm run start",
+    "start-bot": "cd bot && npm run start",
+    "start": "./node_modules/.bin/nf start",
     "deploy-heroku": "git push heroku main"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.17.1",
-    "node-telegram-bot-api": "^0.51.0"
+    "foreman": "^3.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
   }
 }

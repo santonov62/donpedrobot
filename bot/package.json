@@ -1,0 +1,15 @@
+{
+  "name": "bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bot.js",
+  "scripts": {
+    "start": "../node_modules/.bin/nf run node bot.js",
+    "dev": "../node_modules/.bin/nf start --procfile Procfile_dev"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.51.0"
+  }
+}
