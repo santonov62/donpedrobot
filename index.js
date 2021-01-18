@@ -25,7 +25,7 @@ bot.onText(/[Нн]а баночку (.+)/, (msg, match) => {
       inline_keyboard: [
         [
           {
-            text: 'Да',
+            text: 'Ставлю баночку',
             // we shall check for this value when we listen
             // for "callback_query"
             callback_data: 'ok'
