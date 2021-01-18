@@ -1,5 +1,6 @@
 process.env["NTBA_FIX_319"] = 1;
 const TelegramBot = require('node-telegram-bot-api');
+const disputeService = require('../backend/service/dispute.service')
 
 // replace the value below with the Telegram token you receive from @BotFather
 const token = process.env.TOKEN;
@@ -13,14 +14,18 @@ const getName = (from) => {
   return `${from.username}` || `${from.first_name} ${from.last_name}`
 }
 
-bot.onText(/([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим) (.+)/, (msg, match) => {
+bot.onText(/([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим) (.+)/, async (msg, match) => {
   // 'msg' is the received Message from Telegram
   // 'match' is the result of executing the regexp above on the text content
   // of the message
   const { from } = msg;
   const chatId = msg.chat.id;
-  const theme = match[2]; // the captured "whatever"
-  const text = `@${getName(from)} спорит что *${theme}*`;
+  const title = match[2]; // the captured "whatever"
+  const text = `@${getName(from)} спорит что *${title}*`;
+
+  if (!text)
+    return;
+  const dispute = await disputeService.add({title});
 
   const opts = {
     // reply_to_message_id: msg.message_id,
@@ -35,18 +40,25 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
             text: 'Да, согласен',
             // we shall check for this value when we listen
             // for "callback_query"
-            callback_data: 'yes'
+            callback_data: JSON.stringify({
+              disputeId: dispute.id,
+              answer: "yes"
+            })
           },
           {
             text: 'Нет, не согласен',
             // we shall check for this value when we listen
             // for "callback_query"
-            callback_data: 'no'
+            callback_data: JSON.stringify({
+              disputeId: dispute.id,
+              answer: "no"
+            })
           },
         ]
       ]
     })
   };
+
   bot.sendMessage(chatId, `${text}`, opts);
 
   // send back the matched "whatever" to the chat
@@ -56,6 +68,7 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
 // Handle callback queries
 bot.on('callback_query', function onCallbackQuery(callbackQuery) {
   const { data, message, from } = callbackQuery;
+  const {answer, disputeId} = JSON.parse(data);
   const opts = {
     parse_mode: "Markdown",
     chat_id: message.chat.id,
@@ -63,10 +76,10 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
   };
   let text;
 
-  if (data === 'yes') {
-    text = `${name} *Да, согласен*`;
+  if (answer === 'yes') {
+    text = `${getName(from)} *Да, согласен*`;
   }
-  if (data === 'no') {
+  if (answer === 'no') {
     text = `${getName(from)} *Нет, не согласен*`;
   }
 
