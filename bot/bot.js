@@ -11,7 +11,7 @@ if (!token)
 // Create a bot that uses 'polling' to fetch new updates
 const bot = new TelegramBot(token, {polling: true});
 
-const getName = (from) => {
+const getUserName = (from) => {
   return `${from.username}` || `${from.first_name} ${from.last_name}`
 }
 
@@ -22,7 +22,7 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
   const { from } = msg;
   const chatId = msg.chat.id;
   const title = match[2]; // the captured "whatever"
-  const text = `@${getName(from)} спорит что *${title}*`;
+  const text = `@${getUserName(from)} спорит что *${title}*`;
 
   if (!text)
     return;
@@ -42,7 +42,7 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
             // we shall check for this value when we listen
             // for "callback_query"
             callback_data: JSON.stringify({
-              disputeId: dispute.id,
+              dispute_id: dispute.id,
               value: "yes"
             })
           },
@@ -51,7 +51,7 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
             // we shall check for this value when we listen
             // for "callback_query"
             callback_data: JSON.stringify({
-              disputeId: dispute.id,
+              dispute_id: dispute.id,
               value: "no"
             })
           },
@@ -69,27 +69,41 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
 // Handle callback queries
 bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
   const { data, message, from } = callbackQuery;
-  const {value, disputeId} = JSON.parse(data);
-  const username = getName(from);
+  const {value, dispute_id} = JSON.parse(data);
+  const username = getUserName(from);
   const opts = {
     parse_mode: "Markdown",
     chat_id: message.chat.id,
     reply_to_message_id: message.message_id,
   };
-  let text;
 
+  let answer = await answerService.search({dispute_id, username});
+  if (answer) {
+    await answerService.save({...answer, value});
+  } else {
+    await answerService.add({value, dispute_id, username});
+  }
+
+  let text;
+  const changeValue = answer ? `передумал` : ``;
   if (value === 'yes') {
-    text = `@${username} *Да, согласен*`;
+    text = `@${username} ${changeValue} *Да, согласен*`;
   }
   if (value === 'no') {
-    text = `@${username} *Нет, не согласен*`;
+    text = `@${username} ${changeValue} *Нет, не согласен*`;
   }
-
-  await answerService.add({value, dispute_id: disputeId, username})
 
   bot.sendMessage(message.chat.id, text, opts);
 });
 
+bot.onText(/\/disputes/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const opts = {
+    parse_mode: "Markdown",
+  }
+  const text = '';
+  bot.sendMessage(chatId, text, opts);
+});
 // Listen for any kind of message. There are different kinds of
 // messages.
 // bot.on('message', (msg) => {
