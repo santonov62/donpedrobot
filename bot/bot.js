@@ -62,13 +62,12 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
     reply_to_message_id: message.message_id,
   };
   let text;
-  const name = `@${from.username}` || `${from.first_name} ${from.last_name}`
 
   if (data === 'yes') {
     text = `${name} *Да, согласен*`;
   }
   if (data === 'no') {
-    text = `${name} *Нет, не согласен*`;
+    text = `${getName(from)} *Нет, не согласен*`;
   }
 
   bot.sendMessage(message.chat.id, text, opts);
