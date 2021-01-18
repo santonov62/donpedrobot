@@ -4,11 +4,18 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "../node_modules/.bin/nf run node index.js"
+    "start": "../node_modules/.bin/nf run node index.js",
+    "db-rollback": "node_modules/.bin/nf run node_modules/.bin/knex migrate:rollback",
+    "db-latest": "node_modules/.bin/nf run node_modules/.bin/knex migrate:latest",
+    "db-change": "node_modules/.bin/nf run node_modules/.bin/knex migrate:make",
+    "db-change-data": "node_modules/.bin/nf run node_modules/.bin/knex seed:make",
+    "db-latest-data": "node_modules/.bin/nf run node_modules/.bin/knex seed:run"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "knex": "^0.21.16",
+    "pg": "^8.5.1"
   }
 }
