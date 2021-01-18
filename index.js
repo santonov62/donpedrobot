@@ -8,7 +8,7 @@ if (!token)
 // Create a bot that uses 'polling' to fetch new updates
 const bot = new TelegramBot(token, {polling: true});
 
-bot.onText(/на баночку (.+)/, (msg, match) => {
+bot.onText(/[Нн]а баночку (.+)/, (msg, match) => {
   // 'msg' is the received Message from Telegram
   // 'match' is the result of executing the regexp above on the text content
   // of the message
