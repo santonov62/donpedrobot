@@ -51,7 +51,7 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
   const name = from.username || `${from.first_name} ${from.last_name}`
 
   if (data === 'ok') {
-    text = `@${name} ставит баночку что да`;
+    text = `@${name} ставит баночку`;
   }
 
   bot.sendMessage(message.chat.id, text, opts);
