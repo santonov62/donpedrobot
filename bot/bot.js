@@ -43,7 +43,7 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
             // for "callback_query"
             callback_data: JSON.stringify({
               disputeId: dispute.id,
-              answer: "yes"
+              value: "yes"
             })
           },
           {
@@ -52,7 +52,7 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
             // for "callback_query"
             callback_data: JSON.stringify({
               disputeId: dispute.id,
-              answer: "no"
+              value: "no"
             })
           },
         ]
@@ -67,9 +67,10 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
 });
 
 // Handle callback queries
-bot.on('callback_query', function onCallbackQuery(callbackQuery) {
+bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
   const { data, message, from } = callbackQuery;
-  const {answer, disputeId} = JSON.parse(data);
+  const {value, disputeId} = JSON.parse(data);
+  const username = getName(from);
   const opts = {
     parse_mode: "Markdown",
     chat_id: message.chat.id,
@@ -77,12 +78,14 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
   };
   let text;
 
-  if (answer === 'yes') {
-    text = `${getName(from)} *Да, согласен*`;
+  if (value === 'yes') {
+    text = `@${username} *Да, согласен*`;
   }
-  if (answer === 'no') {
-    text = `${getName(from)} *Нет, не согласен*`;
+  if (value === 'no') {
+    text = `@${username} *Нет, не согласен*`;
   }
+
+  await answerService.add({value, dispute_id: disputeId, username})
 
   bot.sendMessage(message.chat.id, text, opts);
 });
