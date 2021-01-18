@@ -25,7 +25,7 @@ bot.onText(/[Нн]а баночку (.+)/, (msg, match) => {
       inline_keyboard: [
         [
           {
-            text: 'Yes, i\'m in ❤',
+            text: 'Да',
             // we shall check for this value when we listen
             // for "callback_query"
             callback_data: 'ok'
@@ -48,10 +48,10 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
     reply_to_message_id: message.message_id,
   };
   let text;
-  const name = from.username || `${from.first_name} ${from.last_name}`
+  const name = `@${from.username}` || `${from.first_name} ${from.last_name}`
 
   if (data === 'ok') {
-    text = `@${name} ставит баночку`;
+    text = `${name} ставит баночку`;
   }
 
   bot.sendMessage(message.chat.id, text, opts);
