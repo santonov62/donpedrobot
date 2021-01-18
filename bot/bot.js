@@ -13,7 +13,7 @@ const getName = (from) => {
   return `${from.username}` || `${from.first_name} ${from.last_name}`
 }
 
-bot.onText(/([Сс]порим на баночку|[Нн]а баночку|[Сс]порим что|[Сс]порим) (.+)/, (msg, match) => {
+bot.onText(/([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим) (.+)/, (msg, match) => {
   // 'msg' is the received Message from Telegram
   // 'match' is the result of executing the regexp above on the text content
   // of the message
@@ -32,11 +32,17 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку|[Сс]
       inline_keyboard: [
         [
           {
-            text: 'Ставлю баночку',
+            text: 'Да, согласен',
             // we shall check for this value when we listen
             // for "callback_query"
-            callback_data: 'ok'
-          }
+            callback_data: 'yes'
+          },
+          {
+            text: 'Нет, не согласен',
+            // we shall check for this value when we listen
+            // for "callback_query"
+            callback_data: 'no'
+          },
         ]
       ]
     })
@@ -51,14 +57,18 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку|[Сс]
 bot.on('callback_query', function onCallbackQuery(callbackQuery) {
   const { data, message, from } = callbackQuery;
   const opts = {
+    parse_mode: "Markdown",
     chat_id: message.chat.id,
     reply_to_message_id: message.message_id,
   };
   let text;
   const name = `@${from.username}` || `${from.first_name} ${from.last_name}`
 
-  if (data === 'ok') {
-    text = `${name} ставит баночку`;
+  if (data === 'yes') {
+    text = `${name} *Да, согласен*`;
+  }
+  if (data === 'no') {
+    text = `${name} *Нет, не согласен*`;
   }
 
   bot.sendMessage(message.chat.id, text, opts);
