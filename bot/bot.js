@@ -9,16 +9,22 @@ if (!token)
 // Create a bot that uses 'polling' to fetch new updates
 const bot = new TelegramBot(token, {polling: true});
 
-bot.onText(/[Нн]а баночку (.+)/, (msg, match) => {
+const getName = (from) => {
+  return `${from.username}` || `${from.first_name} ${from.last_name}`
+}
+
+bot.onText(/([Сс]порим на баночку|[Нн]а баночку|[Сс]порим что|[Сс]порим) (.+)/, (msg, match) => {
   // 'msg' is the received Message from Telegram
   // 'match' is the result of executing the regexp above on the text content
   // of the message
-
+  const { from } = msg;
   const chatId = msg.chat.id;
-  const resp = match[1]; // the captured "whatever"
+  const theme = match[2]; // the captured "whatever"
+  const text = `@${getName(from)} спорит что *${theme}*`;
 
   const opts = {
     // reply_to_message_id: msg.message_id,
+    parse_mode: "Markdown",
     reply_markup: JSON.stringify({
       // keyboard: [
       //   ['Yes, i\'m in ❤']
@@ -35,7 +41,7 @@ bot.onText(/[Нн]а баночку (.+)/, (msg, match) => {
       ]
     })
   };
-  bot.sendMessage(chatId, `${resp}`, opts);
+  bot.sendMessage(chatId, `${text}`, opts);
 
   // send back the matched "whatever" to the chat
   // bot.sendMessage(chatId, resp);
