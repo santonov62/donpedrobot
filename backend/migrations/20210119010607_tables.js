@@ -11,6 +11,7 @@ exports.up = async function (knex) {
   const answers = await knex.schema.createTable('answers', table => {
     table.increments();
     table.text('value').notNullable();
+    table.text('username').notNullable();
     table.integer('dispute_id').notNullable()
         .references('id').inTable('disputes');
     table.timestamps(true, true);
@@ -20,7 +21,7 @@ exports.up = async function (knex) {
 };
 
 exports.down = async function (knex) {
-  const disputes = await knex.schema.dropTable('disputes');
   const answers = await knex.schema.dropTable('answers');
+  const disputes = await knex.schema.dropTable('disputes');
   return Promise.all([disputes, answers]);
 };
