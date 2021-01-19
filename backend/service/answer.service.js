@@ -22,6 +22,12 @@ const search = async ({dispute_id, username}) => {
   return result.rows && result.rows[0];
 };
 
+const ANSWER_BY_DISPUTE_ID = `SELECT * FROM answers WHERE dispute_id = $1`;
+const byDisputeId = async ({dispute_id}) => {
+  const result = await db.query(ANSWER_BY_DISPUTE_ID, [dispute_id]);
+  return result.rows;
+};
+
 const UPDATE_ANSWER_VALUE = `UPDATE answers
 SET
   "value" = $2
@@ -40,5 +46,6 @@ const log = (text, params) => {
 module.exports = {
   add,
   search,
-  save
+  save,
+  byDisputeId
 };
