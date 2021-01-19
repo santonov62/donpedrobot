@@ -1,7 +1,8 @@
 process.env["NTBA_FIX_319"] = 1;
 const TelegramBot = require('node-telegram-bot-api');
-const disputeService = require('../backend/service/dispute.service')
-const answerService = require('../backend/service/answer.service')
+const disputeService = require('../backend/service/dispute.service');
+const answerService = require('../backend/service/answer.service');
+const moment = require('moment');
 
 // replace the value below with the Telegram token you receive from @BotFather
 const token = process.env.TOKEN;
@@ -32,9 +33,6 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
     // reply_to_message_id: msg.message_id,
     parse_mode: "Markdown",
     reply_markup: JSON.stringify({
-      // keyboard: [
-      //   ['Yes, i\'m in ❤']
-      // ]
       inline_keyboard: [
         [
           {
@@ -43,6 +41,7 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
             // for "callback_query"
             callback_data: JSON.stringify({
               dispute_id: dispute.id,
+              action: 'answer',
               value: "yes"
             })
           },
@@ -52,6 +51,7 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
             // for "callback_query"
             callback_data: JSON.stringify({
               dispute_id: dispute.id,
+              action: 'answer',
               value: "no"
             })
           },
@@ -66,35 +66,100 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
   // bot.sendMessage(chatId, resp);
 });
 
+let expiredMap = {};
+
 // Handle callback queries
 bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
   const { data, message, from } = callbackQuery;
-  const {value, dispute_id} = JSON.parse(data);
+  const {value, dispute_id, action} = JSON.parse(data);
   const username = getUserName(from);
+  const chatId = message.chat.id;
+
   const opts = {
     parse_mode: "Markdown",
     chat_id: message.chat.id,
     reply_to_message_id: message.message_id,
   };
 
-  let answer = await answerService.search({dispute_id, username});
-  if (answer) {
-    await answerService.save({...answer, value});
-  } else {
-    await answerService.add({value, dispute_id, username});
-  }
 
-  let text;
-  const changeValue = answer ? `передумал` : ``;
-  if (value === 'yes') {
-    text = `@${username} ${changeValue} *Да, согласен*`;
-  }
-  if (value === 'no') {
-    text = `@${username} ${changeValue} *Нет, не согласен*`;
-  }
+  if (action === 'answer') {
+    let answer = await answerService.search({dispute_id, username});
+    if (answer) {
+      await answerService.save({...answer, value});
+    } else {
+      await answerService.add({value, dispute_id, username});
+    }
 
-  bot.sendMessage(message.chat.id, text, opts);
+    if (!expiredMap[dispute_id]) {
+      expiredMap[dispute_id] = setTimeout(() => {
+        requestExpired({dispute_id, chatId, opts});
+      }, 3 * 1000);
+    }
+    let text;
+    const changeValue = answer ? `передумал` : ``;
+    if (value === 'yes') {
+      text = `@${username} ${changeValue} *Да, согласен*`;
+    }
+    if (value === 'no') {
+      text = `@${username} ${changeValue} *Нет, не согласен*`;
+    }
+    bot.sendMessage(chatId, text, opts);
+  }
+  if (action === 'expired') {
+    delete expiredMap[dispute_id];
+    const expired_at = moment.unix(value);
+    await disputeService.save({id: dispute_id, expired_at});
+    let text = `@${username} поставил дату окончания спора *${expired_at.calendar()}*`;
+    bot.sendMessage(chatId, text, { ...opts, reply_to_message_id: message.reply_to_message.message_id });
+  }
 });
+
+function requestExpired({dispute_id, chatId, opts}) {
+  // const tomorrow  = moment().add(1,'days');
+  bot.sendMessage(chatId, `Когда подвести итоги спора?`, {
+    ...opts,
+    reply_markup: JSON.stringify({
+      inline_keyboard: [
+        [
+          {
+            text: 'Завтра',
+            callback_data: JSON.stringify({
+              dispute_id: dispute_id,
+              action: 'expired',
+              value: moment().add(1, 'days').unix()
+            })
+          },
+          {
+            text: 'Послезавтра',
+            callback_data: JSON.stringify({
+              dispute_id: dispute_id,
+              action: 'expired',
+              value: moment().add(2, 'days').unix()
+            })
+          }
+        ],
+        [
+          {
+            text: 'Через неделю',
+            callback_data: JSON.stringify({
+              dispute_id: dispute_id,
+              action: 'expired',
+              value: moment().add(7, 'days').unix()
+            })
+          },
+          {
+            text: 'Через месяц',
+            callback_data: JSON.stringify({
+              dispute_id: dispute_id,
+              action: 'expired',
+              value: moment().add(1, 'month').unix()
+            })
+          }
+        ]
+      ]
+    })
+  });
+}
 
 bot.onText(/\/disputes/, async (msg, match) => {
   const chatId = msg.chat.id;
