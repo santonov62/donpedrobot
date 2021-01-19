@@ -1,16 +1,20 @@
 const db = require('./db.service');
 
 const ADD_ANSWER = `INSERT INTO answers (
-    "value", "dispute_id", "username"
+    "value", "dispute_id", "username",
+    "chat_id", "message_id"
 ) VALUES (
-    $1, $2, $3
+    $1, $2, $3,
+    $4, $5
 ) RETURNING *`;
 
-const add = async ({value, dispute_id, username}) => {
+const add = async ({value, dispute_id, username, chat_id, message_id}) => {
   const result = await db.query(ADD_ANSWER, [
     value,
     dispute_id,
-    username
+    username,
+    chat_id,
+    message_id
   ]);
   return result.rows[0];
 };

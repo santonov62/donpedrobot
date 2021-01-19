@@ -4,6 +4,9 @@ exports.up = async function (knex) {
   const disputes = await knex.schema.createTable('disputes', table => {
     table.increments();
     table.text('title').notNullable();
+    table.text('message_id');
+    table.text('chat_id');
+    table.dateTime('resolved_at');
     table.dateTime('expired_at');
     table.timestamps(true, true);
   });

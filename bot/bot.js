@@ -87,7 +87,7 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
     if (answer) {
       await answerService.save({...answer, value});
     } else {
-      await answerService.add({value, dispute_id, username});
+      await answerService.add({value, dispute_id, username, chat_id: chatId, message_id: message.message_id});
     }
 
     if (!expiredMap[dispute_id]) {

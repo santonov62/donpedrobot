@@ -2,7 +2,7 @@ const db = require('./db.service');
 const moment = require('moment');
 
 const EXPIRED_DISPUTES = `SELECT * FROM disputes 
-WHERE "expired_at" < $1`;
+WHERE "expired_at" < $1 AND "resolved_at" IS NULL`;
 const expired = async () => {
   const result = await db.query(EXPIRED_DISPUTES, [moment()]);
   return result.rows;

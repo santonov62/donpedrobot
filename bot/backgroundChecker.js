@@ -9,7 +9,7 @@ setInterval(check, DELAY_MINUTES);
 async function check() {
   const disputes = await disputeService.expired();
   log('Disputes', disputes);
-  for (const {id, title} of disputes) {
+  for (const {id, title, chat_id, message_id} of disputes) {
     const answers = await answerService.byDisputeId({dispute_id: id});
     let yesUsers = '';
     let noUsers = '';
@@ -28,6 +28,7 @@ async function check() {
     if (!!noUsers)
       text += `Да, согласен: ${noUsers}`;
     log(text);
+    // bot.sendMessage(chatId, text, opts);
   };
 }
 
