@@ -4,8 +4,7 @@
   "description": "",
   "main": "bot.js",
   "scripts": {
-    "background-checker": "../node_modules/.bin/nf run node backgroundChecker.js",
-    "start": "../node_modules/.bin/nf run node bot.js",
+    "start": "../node_modules/.bin/nf run node index.js",
     "dev": "../node_modules/.bin/nf start --procfile Procfile_dev"
   },
   "author": "",

@@ -16,18 +16,18 @@ const getUserName = (from) => {
   return `${from.username}` || `${from.first_name} ${from.last_name}`
 }
 
-bot.onText(/([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим) (.+)/, async (msg, match) => {
+bot.onText(/([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим) (.+)/, async (message, match) => {
   // 'msg' is the received Message from Telegram
   // 'match' is the result of executing the regexp above on the text content
   // of the message
-  const { from } = msg;
-  const chatId = msg.chat.id;
+  const { from } = message;
+  const chatId = message.chat.id;
   const title = match[2]; // the captured "whatever"
   const text = `@${getUserName(from)} спорит что *${title}*`;
 
   if (!text)
     return;
-  const dispute = await disputeService.add({title});
+  const dispute = await disputeService.add({title, chat_id: chatId, message_id: message.message_id});
 
   const opts = {
     // reply_to_message_id: msg.message_id,
@@ -87,7 +87,7 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
     if (answer) {
       await answerService.save({...answer, value});
     } else {
-      await answerService.add({value, dispute_id, username, chat_id: chatId, message_id: message.message_id});
+      await answerService.add({value, dispute_id, username});
     }
 
     if (!expiredMap[dispute_id]) {
@@ -109,7 +109,7 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
     delete expiredMap[dispute_id];
     const expired_at = moment.unix(value);
     await disputeService.save({id: dispute_id, expired_at});
-    let text = `@${username} поставил дату окончания спора *${expired_at.calendar()}*`;
+    let text = `@${username} установил дату окончания спора *${expired_at.calendar()}*`;
     bot.sendMessage(chatId, text, { ...opts, reply_to_message_id: message.reply_to_message.message_id });
   }
 });

@@ -1,20 +1,16 @@
 const db = require('./db.service');
 
 const ADD_ANSWER = `INSERT INTO answers (
-    "value", "dispute_id", "username",
-    "chat_id", "message_id"
+    "value", "dispute_id", "username"
 ) VALUES (
-    $1, $2, $3,
-    $4, $5
+    $1, $2, $3
 ) RETURNING *`;
 
-const add = async ({value, dispute_id, username, chat_id, message_id}) => {
+const add = async ({value, dispute_id, username}) => {
   const result = await db.query(ADD_ANSWER, [
     value,
     dispute_id,
-    username,
-    chat_id,
-    message_id
+    username
   ]);
   return result.rows[0];
 };
@@ -27,7 +23,7 @@ const search = async ({dispute_id, username}) => {
 };
 
 const ANSWER_BY_DISPUTE_ID = `SELECT * FROM answers WHERE dispute_id = $1`;
-const byDisputeId = async ({dispute_id}) => {
+const getByDisputeId = async ({dispute_id}) => {
   const result = await db.query(ANSWER_BY_DISPUTE_ID, [dispute_id]);
   return result.rows;
 };
@@ -51,5 +47,5 @@ module.exports = {
   add,
   search,
   save,
-  byDisputeId
+  getByDisputeId
 };
