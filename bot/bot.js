@@ -9,6 +9,8 @@ const token = process.env.TOKEN;
 if (!token)
   throw new Error(`TOKEN required!`);
 
+const SET_EXPIRED_DISPUTE_TIMEOUT_MIN = 0.5;
+
 // Create a bot that uses 'polling' to fetch new updates
 const bot = new TelegramBot(token, {polling: true});
 
@@ -93,7 +95,7 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
     if (!expiredMap[dispute_id]) {
       expiredMap[dispute_id] = setTimeout(() => {
         requestExpired({dispute_id, chatId, opts});
-      }, 3 * 1000);
+      }, SET_EXPIRED_DISPUTE_TIMEOUT_MIN * 60000);
     }
     let text;
     const changeValue = answer ? `передумал` : ``;
@@ -121,6 +123,14 @@ function requestExpired({dispute_id, chatId, opts}) {
     reply_markup: JSON.stringify({
       inline_keyboard: [
         [
+          {
+            text: 'Через 10 мин',
+            callback_data: JSON.stringify({
+              dispute_id: dispute_id,
+              action: 'expired',
+              value: moment().add(10, 'minutes').unix()
+            })
+          },
           {
             text: 'Через час',
             callback_data: JSON.stringify({

@@ -4,9 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start-backend": "cd backend && npm run start",
-    "start-bot": "cd bot && npm run start",
     "start": "./node_modules/.bin/nf start",
+    "postinstall": "cd bot && npm install && cd ../backend && npm install && npm run db-latest",
     "deploy-heroku": "git push heroku main"
   },
   "author": "",

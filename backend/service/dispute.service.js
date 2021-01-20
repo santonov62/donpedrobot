@@ -7,7 +7,7 @@ AND "resolved_at" IS NULL
 AND "chat_id" IS NOT NULL
 AND "message_id" IS NOT NULL`;
 const getExpired = async () => {
-  const result = await db.query(EXPIRED_DISPUTES, [moment().add(6, 'days')]);
+  const result = await db.query(EXPIRED_DISPUTES, [moment()]);
   return result.rows;
 }
 

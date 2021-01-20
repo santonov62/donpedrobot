@@ -5,11 +5,11 @@
   "main": "index.js",
   "scripts": {
     "start": "../node_modules/.bin/nf run node index.js",
-    "db-rollback": "node_modules/.bin/nf run node_modules/.bin/knex migrate:rollback",
-    "db-latest": "node_modules/.bin/nf run node_modules/.bin/knex migrate:latest",
-    "db-change": "node_modules/.bin/nf run node_modules/.bin/knex migrate:make",
-    "db-change-data": "node_modules/.bin/nf run node_modules/.bin/knex seed:make",
-    "db-latest-data": "node_modules/.bin/nf run node_modules/.bin/knex seed:run"
+    "db-rollback": "../node_modules/.bin/nf run node_modules/.bin/knex migrate:rollback",
+    "db-latest": "../node_modules/.bin/nf run node_modules/.bin/knex migrate:latest",
+    "db-change": "../node_modules/.bin/nf run node_modules/.bin/knex migrate:make",
+    "db-change-data": "../node_modules/.bin/nf run node_modules/.bin/knex seed:make",
+    "db-latest-data": "../node_modules/.bin/nf run node_modules/.bin/knex seed:run"
   },
   "author": "",
   "license": "ISC",

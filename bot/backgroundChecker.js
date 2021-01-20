@@ -1,4 +1,4 @@
-const DELAY_MINUTES = 1 * 60000;
+const DELAY_MINUTES = 5 * 60000;
 const disputeService = require('../backend/service/dispute.service');
 const answerService = require('../backend/service/answer.service');
 const bot = require('./bot');
