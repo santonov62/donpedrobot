@@ -9,7 +9,7 @@ const token = process.env.TOKEN;
 if (!token)
   throw new Error(`TOKEN required!`);
 
-const REQUEST_EXPIRED_AFTER_MINUTES = 0.5;
+const REQUEST_EXPIRED_AFTER_MINUTES = 0.2;
 
 // Create a bot that uses 'polling' to fetch new updates
 const bot = new TelegramBot(token, {polling: true});
