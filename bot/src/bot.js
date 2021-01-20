@@ -95,20 +95,45 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
   if (action === 'answer') {
     let answer = await answerService.search({dispute_id, username});
     if (answer) {
-      await answerService.save({...answer, value});
+      answer = await answerService.save({...answer, value});
     } else {
-      await answerService.add({value, dispute_id, username});
+      answer = await answerService.add({value, dispute_id, username});
     }
 
-    let text;
-    const changeValue = answer ? `передумал` : ``;
-    if (value === 'yes') {
-      text = `@${username} ${changeValue} <b>Да, согласен</b>`;
+    const answers = await answerService.getByDisputeId({dispute_id});
+    const dispute = await disputeService.getById({id: dispute_id});
+    let yesUsers = '';
+    let noUsers = '';
+    for (const {value, username} of answers) {
+      if (value === 'yes')
+        yesUsers += ` @${username}`;
+      if (value === 'no')
+        noUsers += ` @${username}`;
     }
-    if (value === 'no') {
-      text = `@${username} ${changeValue} <b>Нет, не согласен</b>`;
-    }
-    bot.sendMessage(chatId, text, opts);
+
+    let text = dispute.title;
+    if (!!yesUsers)
+      text += `Да, согласен: ${yesUsers}`;
+    if (!!noUsers)
+      text += `Нет, не согласен: ${noUsers}`;
+
+    const opts = {
+      parse_mode: "HTML",
+      chat_id: chatId,
+      message_id: message.message_id,
+      reply_markup: message.reply_markup
+    };
+    // const changeValue = answer ? `передумал` : ``;
+    // if (value === 'yes') {
+    //   text += `\n@${username} ${changeValue} <b>Да, согласен</b>`;
+    // }
+    // if (value === 'no') {
+    //   text += `\n@${username} ${changeValue} <b>Нет, не согласен</b>`;
+    // }
+    // bot.sendMessage(chatId, text, opts);
+
+    bot.editMessageText(text, opts);
+
   }
   if (action === 'expired') {
     const expired_at = moment.unix(value);
