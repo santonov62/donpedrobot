@@ -21,7 +21,7 @@ const getUserName = (from) => {
 bot.onText(/^\@don_pedrobot+\b$/, async (message, match) => {
   const chatId = message.chat.id;
   bot.sendMessage(chatId, `
-  Я бот помогаю спорить. Напиши "Спорим" или обратись ко мне @don_pedrobot и через пробел напиши на что хочешь поспорить. 
+  Я бот помогаю спорить. Напиши "Спорим" или обратись ко мне @don_pedrobot и через пробел напиши тему. 
   Примеры:
   @don_pedrobot Курс доллара будет расти
   Спорим Курс доллара будет расти
