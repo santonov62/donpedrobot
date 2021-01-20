@@ -34,10 +34,8 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
   const { from } = message;
   const chatId = message.chat.id;
   const title = match[2]; // the captured "whatever"
-  if (!title) {
-    bot.sendMessage(chatId, `@don_pedrobot Название спора`);
+  if (!title)
     return;
-  }
   const text = `@${getUserName(from)} <b>${title}</b>`;
 
   const dispute = await disputeService.add({title, chat_id: chatId, message_id: message.message_id});
