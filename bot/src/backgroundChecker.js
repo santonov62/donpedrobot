@@ -28,7 +28,8 @@ async function check() {
         noUsers += ` @${username}`;
     }
 
-    let text = `<b>Спор завершен</b> 
+    let text = `<b>Спор окончен</b> 
+    Результаты: 
     `;
     if (!!yesUsers)
       text += `Да, согласен: ${yesUsers}`;
@@ -54,6 +55,8 @@ async function check() {
 function log(text, params = '') {
   console.log(`[backgroundChecker] -> ${text}`, params);
 }
+
+log('started')
 
 module.exports = {
   start

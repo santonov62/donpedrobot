@@ -9,7 +9,7 @@ const token = process.env.TOKEN;
 if (!token)
   throw new Error(`TOKEN required!`);
 
-const REQUEST_EXPIRED_AFTER_MINUTES = 0.3;
+const REQUEST_EXPIRED_AFTER_MINUTES = 0.4;
 
 // Create a bot that uses 'polling' to fetch new updates
 const bot = new TelegramBot(token, {polling: true});
@@ -18,7 +18,7 @@ const getUserName = (from) => {
   return from.username || `${from.first_name} ${from.last_name}`
 }
 
-bot.onText(/^\@don_pedrobot+\b$/, async (message, match) => {
+bot.onText(/^@don_pedrobot+\b$/, async (message, match) => {
   const chatId = message.chat.id;
   bot.sendMessage(chatId, `
   Я бот помогаю спорить. Напиши <b>"Спорим"</b> или обратись ко мне @don_pedrobot и через пробел укажи тему. 
@@ -30,13 +30,13 @@ bot.onText(/^\@don_pedrobot+\b$/, async (message, match) => {
   <b>На баночку что</b> Курс доллара будет расти`, {parse_mode: "HTML"});
 });
 
-bot.onText(/([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим)|@don_pedrobot (.+)/, async (message, match) => {
+bot.onText(/([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим|@don_pedrobot) (.+)/, async (message, match) => {
   const { from } = message;
   const chatId = message.chat.id;
   const title = match[2]; // the captured "whatever"
   if (!title)
     return;
-  const text = `@${getUserName(from)} <b>${title}</b>`;
+  const text = `@${getUserName(from)} спорит что <b>${title}</b>`;
 
   const dispute = await disputeService.add({title, chat_id: chatId, message_id: message.message_id});
   setTimeout(() => {
@@ -116,7 +116,7 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
 });
 
 function requestWhenExpired({id: dispute_id, chat_id, message_id}) {
-  bot.sendMessage(chat_id, `Когда подвести итоги?`, {
+  bot.sendMessage(chat_id, `Когда показать результаты?`, {
     parse_mode: "HTML",
     chat_id,
     reply_to_message_id: message_id,
@@ -180,5 +180,11 @@ function requestWhenExpired({id: dispute_id, chat_id, message_id}) {
     })
   });
 }
+
+function log(text, params = '') {
+  console.log(`[bot] -> ${text}`, params);
+}
+
+log('started');
 
 module.exports = bot
