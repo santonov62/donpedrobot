@@ -18,14 +18,28 @@ const getUserName = (from) => {
   return from.username || `${from.first_name} ${from.last_name}`
 }
 
-bot.onText(/([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим) (.+)/, async (message, match) => {
+bot.onText(/^\@don_pedrobot+\b$/, async (message, match) => {
+  const chatId = message.chat.id;
+  bot.sendMessage(chatId, `
+  Я бот помогаю спорить. Напиши "Спорим" или обратись ко мне @don_pedrobot и через пробел напиши на что хочешь поспорить. 
+  Примеры:
+  @don_pedrobot Курс доллара будет расти
+  Спорим Курс доллара будет расти
+  Спорим что Курс доллара будет расти
+  На баночку Курс доллара будет расти
+  На баночку что Курс доллара будет расти`);
+});
+
+bot.onText(/([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим)|@don_pedrobot (.+)/, async (message, match) => {
   const { from } = message;
   const chatId = message.chat.id;
   const title = match[2]; // the captured "whatever"
-  const text = `@${getUserName(from)} спорит что *${title}*`;
-
-  if (!text)
+  if (!title) {
+    bot.sendMessage(chatId, `@don_pedrobot Название спора`);
     return;
+  }
+  const text = `@${getUserName(from)} *${title}*`;
+
   const dispute = await disputeService.add({title, chat_id: chatId, message_id: message.message_id});
   setTimeout(() => {
     requestWhenExpired(dispute);
@@ -98,13 +112,13 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
     const expired_at = moment.unix(value);
     await disputeService.save({id: dispute_id, expired_at});
     const formatDate = process.env.NODE_ENV === 'production' ? expired_at.add(3, 'hours').calendar() : expired_at.calendar()
-    let text = `@${username} установил дату окончания спора *${formatDate}*`;
+    let text = `@${username} установил дату подведения итогов *${formatDate}*`;
     bot.sendMessage(chatId, text, { ...opts, reply_to_message_id: message.reply_to_message.message_id });
   }
 });
 
 function requestWhenExpired({id: dispute_id, chat_id, message_id}) {
-  bot.sendMessage(chat_id, `Когда подвести итоги спора?`, {
+  bot.sendMessage(chat_id, `Когда подвести итоги?`, {
     parse_mode: "Markdown",
     chat_id,
     reply_to_message_id: message_id,
