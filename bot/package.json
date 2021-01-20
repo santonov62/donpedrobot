@@ -2,9 +2,9 @@
   "name": "bot",
   "version": "1.0.0",
   "description": "",
-  "main": "bot.js",
+  "main": "src/index.js",
   "scripts": {
-    "start": "../node_modules/.bin/nf run node index.js",
+    "start": "../node_modules/.bin/nf run node src/index.js",
     "dev": "../node_modules/.bin/nf start --procfile Procfile_dev"
   },
   "author": "",

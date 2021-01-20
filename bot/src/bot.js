@@ -1,7 +1,7 @@
 process.env["NTBA_FIX_319"] = 1;
 const TelegramBot = require('node-telegram-bot-api');
-const disputeService = require('../backend/service/dispute.service');
-const answerService = require('../backend/service/answer.service');
+const disputeService = require('../../backend/src/service/dispute.service');
+const answerService = require('../../backend/src/service/answer.service');
 const moment = require('moment');
 
 // replace the value below with the Telegram token you receive from @BotFather
