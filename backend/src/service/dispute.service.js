@@ -13,7 +13,7 @@ const getExpired = async () => {
 }
 
 const DISPUTE_BY_ID = `SELECT * FROM disputes 
-WHERE "id" < $1`;
+WHERE "id" = $1`;
 const getById = async ({id}) => {
   const result = await db.query(DISPUTE_BY_ID, [id]);
   log(`getById ${id}`, result.rows[0]);
