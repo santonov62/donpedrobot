@@ -21,14 +21,14 @@ const getUserName = (from) => {
 bot.onText(/^\@don_pedrobot+\b$/, async (message, match) => {
   const chatId = message.chat.id;
   bot.sendMessage(chatId, `
-  Я бот помогаю спорить. Напиши "Спорим" или обратись ко мне @don_pedrobot и через пробел напиши тему. 
+  Я бот помогаю спорить. Напиши <b>"Спорим"</b> или обратись ко мне @don_pedrobot и через пробел укажи тему. 
   Примеры:
   @don_pedrobot Курс доллара будет расти
-  Спорим Курс доллара будет расти
-  Спорим что Курс доллара будет расти
-  На баночку Курс доллара будет расти
-  На баночку что Курс доллара будет расти`);
-});
+  <b>Спорим</b> Курс доллара будет расти
+  <b>Спорим что</b> Курс доллара будет расти
+  <b>На баночку</b> Курс доллара будет расти
+  <b>На баночку что</b> Курс доллара будет расти`);
+}, {parse_mode: "HTML"});
 
 bot.onText(/([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим)|@don_pedrobot (.+)/, async (message, match) => {
   const { from } = message;
@@ -38,14 +38,14 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
     bot.sendMessage(chatId, `@don_pedrobot Название спора`);
     return;
   }
-  const text = `@${getUserName(from)} *${title}*`;
+  const text = `@${getUserName(from)} <b>${title}</b>`;
 
   const dispute = await disputeService.add({title, chat_id: chatId, message_id: message.message_id});
   setTimeout(() => {
     requestWhenExpired(dispute);
   }, REQUEST_EXPIRED_AFTER_MINUTES * 60000);
   const opts = {
-    parse_mode: "Markdown",
+    parse_mode: "HTML",
     reply_markup: JSON.stringify({
       inline_keyboard: [
         [
