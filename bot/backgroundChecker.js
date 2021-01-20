@@ -4,7 +4,7 @@ const answerService = require('../backend/service/answer.service');
 const bot = require('./bot');
 
 function start() {
-  // check();
+  check();
   setInterval(() => {
     try {
       check();
