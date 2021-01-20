@@ -1,7 +1,7 @@
 process.env["NTBA_FIX_319"] = 1;
 const TelegramBot = require('node-telegram-bot-api');
-const disputeService = require('../../backend/src/service/dispute.service');
-const answerService = require('../../backend/src/service/answer.service');
+const disputeService = require('../../backend/src/service/dispute.service');  //hack
+const answerService = require('../../backend/src/service/answer.service');  //hack
 const moment = require('moment');
 
 // replace the value below with the Telegram token you receive from @BotFather
@@ -9,7 +9,7 @@ const token = process.env.TOKEN;
 if (!token)
   throw new Error(`TOKEN required!`);
 
-const REQUEST_EXPIRED_AFTER_MINUTES = 0.2;
+const REQUEST_EXPIRED_AFTER_MINUTES = 0.3;
 
 // Create a bot that uses 'polling' to fetch new updates
 const bot = new TelegramBot(token, {polling: true});
