@@ -92,8 +92,9 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
       await answerService.add({value, dispute_id, username});
     }
 
-    if (!expiredMap[dispute_id]) {
-      expiredMap[dispute_id] = setTimeout(() => {
+    const uid = chat_id + dispute_id;
+    if (!expiredMap[uid]) {
+      expiredMap[uid] = setTimeout(() => {
         requestExpired({dispute_id, chatId, opts});
       }, SET_EXPIRED_DISPUTE_TIMEOUT_MIN * 60000);
     }
@@ -108,7 +109,6 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
     bot.sendMessage(chatId, text, opts);
   }
   if (action === 'expired') {
-    delete expiredMap[dispute_id];
     const expired_at = moment.unix(value);
     await disputeService.save({id: dispute_id, expired_at});
     let text = `@${username} установил дату окончания спора *${expired_at.calendar()}*`;
