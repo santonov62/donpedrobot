@@ -9,7 +9,7 @@ const token = process.env.TOKEN;
 if (!token)
   throw new Error(`TOKEN required!`);
 
-const SET_EXPIRED_DISPUTE_TIMEOUT_MIN = 0.5;
+const REQUEST_EXPIRED_AFTER_MINUTES = 0.5;
 
 // Create a bot that uses 'polling' to fetch new updates
 const bot = new TelegramBot(token, {polling: true});
@@ -29,7 +29,7 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
   const dispute = await disputeService.add({title, chat_id: chatId, message_id: message.message_id});
   setTimeout(() => {
     requestWhenExpired(dispute);
-  }, SET_EXPIRED_DISPUTE_TIMEOUT_MIN * 60000);
+  }, REQUEST_EXPIRED_AFTER_MINUTES * 60000);
   const opts = {
     parse_mode: "Markdown",
     reply_markup: JSON.stringify({
