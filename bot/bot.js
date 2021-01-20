@@ -81,7 +81,7 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
   const chatId = message.chat.id;
 
   const opts = {
-    parse_mode: "Markdown",
+    parse_mode: "HTML",
     chat_id: message.chat.id,
     reply_to_message_id: message.message_id,
   };
@@ -101,10 +101,10 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
     let text;
     const changeValue = answer ? `передумал` : ``;
     if (value === 'yes') {
-      text = `@${username} ${changeValue} *Да, согласен*`;
+      text = `@${username} ${changeValue} <b>Да, согласен</b>`;
     }
     if (value === 'no') {
-      text = `@${username} ${changeValue} *Нет, не согласен*`;
+      text = `@${username} ${changeValue} <b>Нет, не согласен</b>`;
     }
     bot.sendMessage(chatId, text, opts);
   }
@@ -112,14 +112,14 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
     const expired_at = moment.unix(value);
     await disputeService.save({id: dispute_id, expired_at});
     const formatDate = process.env.NODE_ENV === 'production' ? expired_at.add(3, 'hours').calendar() : expired_at.calendar()
-    let text = `@${username} установил дату подведения итогов *${formatDate}*`;
+    let text = `@${username} установил дату подведения итогов <b>${formatDate}</b>`;
     bot.sendMessage(chatId, text, { ...opts, reply_to_message_id: message.reply_to_message.message_id });
   }
 });
 
 function requestWhenExpired({id: dispute_id, chat_id, message_id}) {
   bot.sendMessage(chat_id, `Когда подвести итоги?`, {
-    parse_mode: "Markdown",
+    parse_mode: "HTML",
     chat_id,
     reply_to_message_id: message_id,
     reply_markup: JSON.stringify({

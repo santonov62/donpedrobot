@@ -6,7 +6,7 @@
   "scripts": {
     "start": "./node_modules/.bin/nf start",
     "postinstall": "cd bot && npm install && cd ../backend && npm install && npm run db-latest",
-    "deploy-heroku": "git push heroku main"
+    "deploy-heroku-dev": "git push heroku dev:main"
   },
   "author": "",
   "license": "ISC",
