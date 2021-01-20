@@ -20,6 +20,22 @@ const getById = async ({id}) => {
   return result.rows[0];
 }
 
+const DISPUTE_BY_CHAT_ID = `SELECT * FROM disputes 
+WHERE "chat_id" = $1`;
+const getByChatId = async ({chat_id}) => {
+  const result = await db.query(DISPUTE_BY_ID, [chat_id]);
+  log(`getByChatId ${chat_id}`, result.rows);
+  return result.rows;
+}
+
+const OPENED_DISPUTE = `SELECT * FROM disputes 
+WHERE "resolved_at" IS NULL AND "chat_id" = $1`;
+const getOpened = async ({chat_id}) => {
+  const result = await db.query(OPENED_DISPUTE, [chat_id]);
+  log(`getOpened ${chat_id}`, result.rows);
+  return result.rows;
+}
+
 const ADD_DISPUTE = `INSERT INTO disputes (
     "title", "expired_at", "chat_id", "message_id"
 ) VALUES (
@@ -70,5 +86,7 @@ module.exports = {
   save,
   getExpired,
   resolve,
-  getById
+  getById,
+  getByChatId,
+  getOpened
 };

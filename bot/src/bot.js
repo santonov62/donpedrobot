@@ -22,12 +22,17 @@ bot.onText(/^@don_pedrobot+\b$/, async (message, match) => {
   const chatId = message.chat.id;
   bot.sendMessage(chatId, `
   Я бот помогаю спорить. Напиши <b>"Спорим"</b> или обратись ко мне @don_pedrobot и через пробел укажи тему. 
+  
   Примеры:
   @don_pedrobot Курс доллара будет расти
   <b>Спорим</b> Курс доллара будет расти
   <b>Спорим что</b> Курс доллара будет расти
+  <b>Спорим на баночку</b> Курс доллара будет расти
   <b>На баночку</b> Курс доллара будет расти
-  <b>На баночку что</b> Курс доллара будет расти`, {parse_mode: "HTML"});
+  <b>На баночку что</b> Курс доллара будет расти
+  
+  Команды:
+  /disputes - Показать список незавершенных споров`, {parse_mode: "HTML"});
 });
 
 bot.onText(/([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим|@don_pedrobot) (.+)/, async (message, match) => {
@@ -40,7 +45,7 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
 
   const dispute = await disputeService.add({title, chat_id: chatId, message_id: message.message_id});
   setTimeout(() => {
-    requestWhenExpired(dispute);
+    sendWhenExpiredMessage(dispute);
   }, REQUEST_EXPIRED_AFTER_MINUTES * 60000);
   const opts = {
     parse_mode: "HTML",
@@ -71,7 +76,6 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
   bot.sendMessage(chatId, `${text}`, opts);
 });
 
-// Handle callback queries
 bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
   const { data, message, from } = callbackQuery;
   const {value, dispute_id, action} = JSON.parse(data);
@@ -115,7 +119,7 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
   }
 });
 
-function requestWhenExpired({id: dispute_id, chat_id, message_id}) {
+function sendWhenExpiredMessage({id: dispute_id, chat_id, message_id}) {
   bot.sendMessage(chat_id, `Когда показать результаты?`, {
     parse_mode: "HTML",
     chat_id,
@@ -180,6 +184,17 @@ function requestWhenExpired({id: dispute_id, chat_id, message_id}) {
     })
   });
 }
+
+bot.onText(/\/disputes/, async (message, match) => {
+  const { from } = message;
+  const chat_id = message.chat.id;
+  const opts = {parse_mode: "HTML"}
+  const disputes = await disputeService.getOpened({chat_id});
+  const text = disputes.reduce((acc, {title, expired_at}, index) => acc +
+  `${index+1}. ${title} -> <b>${moment(expired_at).calendar()}</b>\n`, ``) || 'Нет незавершенных';
+
+  bot.sendMessage(chat_id, `${text}`, opts);
+});
 
 function log(text, params = '') {
   console.log(`[bot] -> ${text}`, params);
