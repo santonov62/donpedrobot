@@ -37,12 +37,14 @@ async function check() {
     log(text);
 
     const opts = {
-      parse_mode: "Markdown",
+      parse_mode: "HTML",
       chat_id: chat_id,
       reply_to_message_id: message_id,
     };
     try {
       await bot.sendMessage(chat_id, text, opts);
+    } catch(e) {
+      log('ERROR: ', e.message)
     } finally {
       await disputeService.resolve({id: dispute_id})
     }
