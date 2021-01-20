@@ -1,2 +1,2 @@
-web: cd backend && npm run start
-bot: cd bot && npm run start
+web1: cd backend && npm run start
+web2: cd bot && npm run start
