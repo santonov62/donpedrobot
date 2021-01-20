@@ -3,9 +3,8 @@ REQUIREMENTS
 
 INSTALL
 
-1. `npm i`
-2. `cd bot && npm i`
-3. `cd backoffice && npm i`
+1. `cd bot && npm i`
+2. `cd backoffice && npm i`
 
 ENV
 

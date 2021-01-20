@@ -41,8 +41,11 @@ async function check() {
       chat_id: chat_id,
       reply_to_message_id: message_id,
     };
-    await bot.sendMessage(chat_id, text, opts);
-    await disputeService.resolve({id: dispute_id})
+    try {
+      await bot.sendMessage(chat_id, text, opts);
+    } finally {
+      await disputeService.resolve({id: dispute_id})
+    }
   };
 }
 
