@@ -97,7 +97,8 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
   if (action === 'expired') {
     const expired_at = moment.unix(value);
     await disputeService.save({id: dispute_id, expired_at});
-    let text = `@${username} установил дату окончания спора *${expired_at.calendar()}*`;
+    const formatDate = process.env.NODE_ENV === 'production' ? expired_at.add(3, 'hours').calendar() : expired_at.calendar()
+    let text = `@${username} установил дату окончания спора *${formatDate}*`;
     bot.sendMessage(chatId, text, { ...opts, reply_to_message_id: message.reply_to_message.message_id });
   }
 });
