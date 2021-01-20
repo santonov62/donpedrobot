@@ -56,7 +56,7 @@ function log(text, params = '') {
   console.log(`[backgroundChecker] -> ${text}`, params);
 }
 
-log('started')
+log('STARTED!')
 
 module.exports = {
   start
