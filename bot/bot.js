@@ -19,9 +19,6 @@ const getUserName = (from) => {
 }
 
 bot.onText(/([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим) (.+)/, async (message, match) => {
-  // 'msg' is the received Message from Telegram
-  // 'match' is the result of executing the regexp above on the text content
-  // of the message
   const { from } = message;
   const chatId = message.chat.id;
   const title = match[2]; // the captured "whatever"
@@ -30,17 +27,16 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
   if (!text)
     return;
   const dispute = await disputeService.add({title, chat_id: chatId, message_id: message.message_id});
-
+  setTimeout(() => {
+    requestWhenExpired(dispute);
+  }, SET_EXPIRED_DISPUTE_TIMEOUT_MIN * 60000);
   const opts = {
-    // reply_to_message_id: msg.message_id,
     parse_mode: "Markdown",
     reply_markup: JSON.stringify({
       inline_keyboard: [
         [
           {
             text: 'Да, согласен',
-            // we shall check for this value when we listen
-            // for "callback_query"
             callback_data: JSON.stringify({
               dispute_id: dispute.id,
               action: 'answer',
@@ -49,8 +45,6 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
           },
           {
             text: 'Нет, не согласен',
-            // we shall check for this value when we listen
-            // for "callback_query"
             callback_data: JSON.stringify({
               dispute_id: dispute.id,
               action: 'answer',
@@ -63,12 +57,7 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
   };
 
   bot.sendMessage(chatId, `${text}`, opts);
-
-  // send back the matched "whatever" to the chat
-  // bot.sendMessage(chatId, resp);
 });
-
-let expiredMap = {};
 
 // Handle callback queries
 bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
@@ -83,6 +72,9 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
     reply_to_message_id: message.message_id,
   };
 
+  // const dispute = disputeService.getById({id: dispute_id});
+  // if(!dispute)
+  //   throw new Error(`No dispute with id: ${dispute_id}`);
 
   if (action === 'answer') {
     let answer = await answerService.search({dispute_id, username});
@@ -92,12 +84,6 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
       await answerService.add({value, dispute_id, username});
     }
 
-    const uid = chatId + dispute_id;
-    if (!expiredMap[uid]) {
-      expiredMap[uid] = setTimeout(() => {
-        requestExpired({dispute_id, chatId, opts});
-      }, SET_EXPIRED_DISPUTE_TIMEOUT_MIN * 60000);
-    }
     let text;
     const changeValue = answer ? `передумал` : ``;
     if (value === 'yes') {
@@ -116,10 +102,11 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
   }
 });
 
-function requestExpired({dispute_id, chatId, opts}) {
-  // const tomorrow  = moment().add(1,'days');
-  bot.sendMessage(chatId, `Когда подвести итоги спора?`, {
-    ...opts,
+function requestWhenExpired({id: dispute_id, chat_id, message_id}) {
+  bot.sendMessage(chat_id, `Когда подвести итоги спора?`, {
+    parse_mode: "Markdown",
+    chat_id,
+    reply_to_message_id: message_id,
     reply_markup: JSON.stringify({
       inline_keyboard: [
         [
@@ -180,22 +167,5 @@ function requestExpired({dispute_id, chatId, opts}) {
     })
   });
 }
-
-bot.onText(/\/disputes/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  const opts = {
-    parse_mode: "Markdown",
-  }
-  const text = '';
-  bot.sendMessage(chatId, text, opts);
-});
-// Listen for any kind of message. There are different kinds of
-// messages.
-// bot.on('message', (msg) => {
-//   const chatId = msg.chat.id;
-//
-//   // send a message to the chat acknowledging receipt of their message
-//   bot.sendMessage(chatId, 'Received your message');
-// });
 
 module.exports = bot

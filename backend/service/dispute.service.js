@@ -7,10 +7,17 @@ AND "resolved_at" IS NULL
 AND "chat_id" IS NOT NULL
 AND "message_id" IS NOT NULL`;
 const getExpired = async () => {
-  log('getExpired')
   const result = (await db.query(EXPIRED_DISPUTES, [moment()])) || [];
-  log('getExpired result', result.rows);
+  log('getExpired', result.rows);
   return result.rows;
+}
+
+const DISPUTE_BY_ID = `SELECT * FROM disputes 
+WHERE "id" < $1`;
+const getById = async ({id}) => {
+  const result = await db.query(DISPUTE_BY_ID, [id]);
+  log(`getById ${id}`, result.rows[0]);
+  return result.rows[0];
 }
 
 const ADD_DISPUTE = `INSERT INTO disputes (
@@ -20,14 +27,13 @@ const ADD_DISPUTE = `INSERT INTO disputes (
 ) RETURNING *`;
 
 const add = async ({title, expired_at, chat_id, message_id}) => {
-  log('add', {title, expired_at, chat_id, message_id})
   const result = await db.query(ADD_DISPUTE, [
     title,
     expired_at,
     chat_id,
     message_id
   ]);
-  log('add result', result.rows[0]);
+  log('add -> ', result.rows[0]);
   return result.rows[0];
 };
 
@@ -38,9 +44,8 @@ WHERE
   id = $1
 RETURNING *`;
 const save = async ({id, expired_at}) => {
-  log('save', {id, expired_at});
   const result = await db.query(UPDATE_DISPUTE_EXPIRED, [id, expired_at]);
-  log('save result', result.rows[0]);
+  log('save -> ', result.rows[0]);
   return result.rows[0];
 };
 
@@ -51,13 +56,12 @@ WHERE
   id = $1
 RETURNING *`;
 const resolve = async ({id}) => {
-  log('resolve', {id});
   const result = await db.query(UPDATE_DISPUTE_RESOLVE, [id, moment()]);
-  log('resolve result', result.rows[0]);
+  log('resolve -> ', result.rows[0]);
   return result.rows[0];
 };
 
-const log = (text, params) => {
+const log = (text, params = '') => {
   console.log(`[disputes.service] -> ${text}`, params);
 };
 
@@ -65,5 +69,6 @@ module.exports = {
   add,
   save,
   getExpired,
-  resolve
+  resolve,
+  getById
 };
