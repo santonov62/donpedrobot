@@ -28,7 +28,7 @@ async function check() {
         noUsers += ` @${username}`;
     }
 
-    let text = `*Спор завершен* 
+    let text = `<b>Спор завершен</b> 
     `;
     if (!!yesUsers)
       text += `Да, согласен: ${yesUsers}`;
