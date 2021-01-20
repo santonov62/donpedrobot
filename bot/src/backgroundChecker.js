@@ -34,7 +34,7 @@ async function check() {
     if (!!yesUsers)
       text += `Да, согласен: ${yesUsers}`;
     if (!!noUsers)
-      text += `Да, согласен: ${noUsers}`;
+      text += `Нет, не согласен: ${noUsers}`;
     log(text);
 
     const opts = {
