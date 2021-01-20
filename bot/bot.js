@@ -92,7 +92,7 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
       await answerService.add({value, dispute_id, username});
     }
 
-    const uid = chat_id + dispute_id;
+    const uid = chatId + dispute_id;
     if (!expiredMap[uid]) {
       expiredMap[uid] = setTimeout(() => {
         requestExpired({dispute_id, chatId, opts});
