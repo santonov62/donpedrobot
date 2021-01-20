@@ -122,6 +122,16 @@ function requestExpired({dispute_id, chatId, opts}) {
       inline_keyboard: [
         [
           {
+            text: 'Через час',
+            callback_data: JSON.stringify({
+              dispute_id: dispute_id,
+              action: 'expired',
+              value: moment().add(1, 'hours').unix()
+            })
+          }
+        ],
+        [
+          {
             text: 'Завтра',
             callback_data: JSON.stringify({
               dispute_id: dispute_id,

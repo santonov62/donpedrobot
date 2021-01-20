@@ -29,7 +29,7 @@ async function check() {
     }
 
     let text = `*Спор завершен* 
-      `;
+    `;
     if (!!yesUsers)
       text += `Да, согласен: ${yesUsers}`;
     if (!!noUsers)
