@@ -15,7 +15,7 @@ const SET_EXPIRED_DISPUTE_TIMEOUT_MIN = 0.5;
 const bot = new TelegramBot(token, {polling: true});
 
 const getUserName = (from) => {
-  return `${from.username}` || `${from.first_name} ${from.last_name}`
+  return from.username || `${from.first_name} ${from.last_name}`
 }
 
 bot.onText(/([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим) (.+)/, async (message, match) => {
