@@ -23,7 +23,8 @@ async function check() {
       reply_to_message_id: message_id,
     };
     let text = `<b>Спор окончен</b>\n`;
-    text += `${generateDisputeTitle({username, title})}`;
+    // text += `${generateDisputeTitle({username, title})}`;
+    text += `${title}\n`;
     text += await generateDisputeResults({dispute_id});
     try {
       await bot.sendMessage(chat_id, text, opts);

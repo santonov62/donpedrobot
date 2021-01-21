@@ -75,50 +75,54 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
 });
 
 bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
-  const { data, message, from } = callbackQuery;
-  const {value, action, dispute_id, title} = JSON.parse(data);
-  const chat_id = message.chat.id;
-  const username = getUserName(from);
-  let {reply_markup} = message;
+  try {
+    const {data, message, from} = callbackQuery;
+    const {value, action, dispute_id, title} = JSON.parse(data);
+    const chat_id = message.chat.id;
+    const username = getUserName(from);
+    let {reply_markup} = message;
 
-  let dispute = await disputeService.getById({id: dispute_id});
-  const {message_id} = dispute;
-  if (action === 'answer') {
-    let answer = await answerService.search({dispute_id, username});
-    if (answer) {
-      await answerService.save({...answer, value});
-    } else {
-      await answerService.add({value, dispute_id, username});
+    let dispute = await disputeService.getById({id: dispute_id});
+    const {message_id} = dispute;
+    if (action === 'answer') {
+      let answer = await answerService.search({dispute_id, username});
+      if (answer) {
+        await answerService.save({...answer, value});
+      } else {
+        await answerService.add({value, dispute_id, username});
+      }
     }
-  }
-  if (action === 'expired') {
-    reply_markup = message.reply_to_message.reply_markup;
+    if (action === 'expired') {
+      reply_markup = message.reply_to_message.reply_markup;
+      const opts = {
+        parse_mode: "HTML",
+        chat_id: chat_id,
+        message_id: message.message_id,
+        reply_to_message_id: message_id,
+        reply_markup: message.reply_markup
+      };
+      const expired_at = moment.unix(value);
+      dispute = await disputeService.save({...dispute, expired_at});
+      const formatDate = process.env.NODE_ENV === 'production' ? expired_at.add(3, 'hours').calendar() : expired_at.calendar()
+      let text = `${message.text}\n`;
+      text += `@${username} установил дату <b>${formatDate}</b>\n`;
+      await bot.editMessageText(text, opts);
+    }
+
     const opts = {
       parse_mode: "HTML",
-      chat_id: chat_id,
-      message_id: message.message_id,
-      reply_to_message_id: message_id,
-      reply_markup: message.reply_markup
+      chat_id,
+      message_id,
+      reply_markup
     };
-    const expired_at = moment.unix(value);
-    dispute = await disputeService.save({...dispute, expired_at});
-    const formatDate = process.env.NODE_ENV === 'production' ? expired_at.add(3, 'hours').calendar() : expired_at.calendar()
-    let text = `${message.text}\n`;
-    text += `@${username} установил дату <b>${formatDate}</b>\n`;
-    bot.editMessageText(text, opts);
+
+    let text = await generateDisputeTitle({username: dispute.username, title: dispute.title});
+    text += await generateDisputeResults({dispute_id});
+    text += await generateDisputeExpired(dispute);
+    await bot.editMessageText(text, opts);
+  } catch (e) {
+    log(`ERROR: `, e.message);
   }
-
-  const opts = {
-    parse_mode: "HTML",
-    chat_id,
-    message_id,
-    reply_markup
-  };
-
-  let text = await generateDisputeTitle({username: dispute.username, title: dispute.title});
-  text += await generateDisputeResults({dispute_id});
-  text += await generateDisputeExpired(dispute);
-  bot.editMessageText(text, opts);
 });
 
 function sendWhenExpiredDispute({id: dispute_id, chat_id, message_id}) {
