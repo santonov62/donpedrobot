@@ -163,7 +163,7 @@ async function generateDisputeResults({dispute_id}) {
 
 function generateDisputeTitle({username, title}) {
   if (!!username)
-    return `@${username} спорит что <b>${title}</b>\n`;
+    return `@${username} спорит <b>${title}</b>\n`;
   return `<b>${title}</b>\n`;
 }
 
