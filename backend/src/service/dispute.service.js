@@ -55,12 +55,13 @@ const add = async ({title, expired_at, chat_id, message_id}) => {
 
 const UPDATE_DISPUTE_EXPIRED = `UPDATE disputes
 SET
-  "expired_at" = $2
+  "expired_at" = $2,
+  "message_id" = $3
 WHERE
   id = $1
 RETURNING *`;
-const save = async ({id, expired_at}) => {
-  const result = await db.query(UPDATE_DISPUTE_EXPIRED, [id, expired_at]);
+const save = async ({id, expired_at, message_id}) => {
+  const result = await db.query(UPDATE_DISPUTE_EXPIRED, [id, expired_at, message_id]);
   log('save -> ', result.rows[0]);
   return result.rows[0];
 };

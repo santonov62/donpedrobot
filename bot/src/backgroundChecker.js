@@ -1,7 +1,6 @@
 const DELAY_MINUTES = 4 * 60000;
 const disputeService = require('../../backend/src/service/dispute.service');
-const answerService = require('../../backend/src/service/answer.service');
-const bot = require('./bot');
+const {bot, generateDisputeResults} = require('./bot');
 
 function start() {
   check();
@@ -18,36 +17,19 @@ async function check() {
   const disputes = await disputeService.getExpired();
   log('Disputes', disputes);
   for (const {id: dispute_id, title, chat_id, message_id} of disputes) {
-    const answers = await answerService.getByDisputeId({dispute_id});
-    let yesUsers = '';
-    let noUsers = '';
-    for (const {value, username} of answers) {
-      if (value === 'yes')
-        yesUsers += ` @${username}`;
-      if (value === 'no')
-        noUsers += ` @${username}`;
-    }
-
-    let text = `<b>Спор окончен</b> 
-    Результаты: 
-    `;
-    if (!!yesUsers)
-      text += `Да, согласен: ${yesUsers}`;
-    if (!!noUsers)
-      text += `Нет, не согласен: ${noUsers}`;
-    log(text);
-
     const opts = {
       parse_mode: "HTML",
       chat_id: chat_id,
       reply_to_message_id: message_id,
     };
+    let text = `<b>Спор окончен</b>\n${title}\n`;
+    text += await generateDisputeResults({dispute_id});
     try {
       await bot.sendMessage(chat_id, text, opts);
     } catch(e) {
       log('ERROR: ', e.message)
     } finally {
-      await disputeService.resolve({id: dispute_id})
+      await disputeService.resolve({id: dispute_id});
     }
   };
 }
