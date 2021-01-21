@@ -86,9 +86,9 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
       };
       const expired_at = moment.unix(value);
       dispute = await disputeService.save({...dispute, expired_at});
-      const formatDate = process.env.NODE_ENV === 'production' ? expired_at.add(3, 'hours').calendar() : expired_at.calendar()
+      // const formatDate = process.env.NODE_ENV === 'production' ? expired_at.add(3, 'hours').calendar() : expired_at.calendar()
       let text = `${message.text}\n`;
-      text += `@${username} установил дату <b>${formatDate}</b>\n`;
+      text += `@${username} установил дату <b>${formatDate(expired_at)}</b>\n`;
       await bot.editMessageText(text, opts);
     }
 
@@ -168,7 +168,7 @@ function generateDisputeTitle({username, title}) {
 }
 
 function generateDisputeExpired({expired_at}) {
-  return expired_at ? `Дата завершения: <b>${moment(expired_at).calendar()}</b>\n` : '';
+  return expired_at ? `Дата завершения: <b>${formatDate(expired_at)}</b>\n` : '';
 }
 
 function log(text, params = '') {
@@ -259,6 +259,10 @@ function getExpiredButtons({dispute_id}) {
       }
     ]
   ]
+}
+
+function formatDate(date) {
+  return process.env.NODE_ENV === 'production' ? moment(date).add(3, 'hours').calendar() : moment(date).calendar();
 }
 
 log('STARTED!');
