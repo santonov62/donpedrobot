@@ -40,9 +40,6 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
   const text = generateDisputeTitle({from, title});
 
   let dispute = await disputeService.add({title, chat_id: chatId});
-  // setTimeout(() => {
-  //   sendWhenExpiredDispute(dispute);
-  // }, REQUEST_EXPIRED_AFTER_MINUTES * 60000);
   const opts = {
     parse_mode: "HTML",
     reply_markup: JSON.stringify({
@@ -79,64 +76,47 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
 bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
   const { data, message, from } = callbackQuery;
   const {value, action, dispute_id, title} = JSON.parse(data);
-  // const {message_id} = message;
   const chat_id = message.chat.id;
   const username = getUserName(from);
-
-  // const dispute = disputeService.getById({id: dispute_id});
-  // if(!dispute)
-  //   throw new Error(`No dispute with id: ${dispute_id}`);
+  let {reply_markup} = message;
 
   let dispute = await disputeService.getById({id: dispute_id});
   const {message_id} = dispute;
   if (action === 'answer') {
-    // if (!dispute) {
-    //   dispute = await disputeService.add({title, chat_id: chat_id, message_id});
-    // }
-    // const {id: dispute_id} = dispute;
-
     let answer = await answerService.search({dispute_id, username});
     if (answer) {
       await answerService.save({...answer, value});
     } else {
       await answerService.add({value, dispute_id, username});
     }
-
-    const opts = {
-      parse_mode: "HTML",
-      chat_id,
-      message_id,
-      reply_markup: message.reply_markup
-    };
-
-    let text = await generateDisputeTitle({from, title: dispute.title});
-    text += await generateDisputeResults({dispute_id});
-
-    // const changeValue = answer ? `передумал` : ``;
-    // if (value === 'yes') {
-    //   text += `\n@${username} ${changeValue} <b>Да, согласен</b>`;
-    // }
-    // if (value === 'no') {
-    //   text += `\n@${username} ${changeValue} <b>Нет, не согласен</b>`;
-    // }
-    // bot.sendMessage(chatId, text, opts);
-
-    bot.editMessageText(text, opts);
-
   }
   if (action === 'expired') {
+    reply_markup = message.reply_to_message.reply_markup;
     const opts = {
       parse_mode: "HTML",
       chat_id: chat_id,
+      message_id: message.message_id,
       reply_to_message_id: message_id,
+      reply_markup: message.reply_markup
     };
     const expired_at = moment.unix(value);
-    await disputeService.save({...dispute, expired_at});
+    dispute = await disputeService.save({...dispute, expired_at});
     const formatDate = process.env.NODE_ENV === 'production' ? expired_at.add(3, 'hours').calendar() : expired_at.calendar()
-    let text = `@${username} установил дату подведения итогов <b>${formatDate}</b>`;
-    // bot.sendMessage(chat_id, text, { ...opts, reply_to_message_id: dispute.message_id });
-    bot.sendMessage(chat_id, text, opts);
+    let text = `${message.text}\n`;
+    text += `@${username} установил дату <b>${formatDate}</b>\n`;
+    bot.editMessageText(text, opts);
   }
+
+  const opts = {
+    parse_mode: "HTML",
+    chat_id,
+    message_id,
+    reply_markup
+  };
+  let text = await generateDisputeTitle({from, title: dispute.title});
+  text += await generateDisputeResults({dispute_id});
+  text += await generateDisputeExpired(dispute);
+  bot.editMessageText(text, opts);
 });
 
 function sendWhenExpiredDispute({id: dispute_id, chat_id, message_id}) {
@@ -210,10 +190,14 @@ bot.onText(/\/disputes/, async (message, match) => {
   const chat_id = message.chat.id;
   const opts = {parse_mode: "HTML"}
   const disputes = await disputeService.getOpened({chat_id});
-  const text = disputes.reduce((acc, {title, expired_at}, index) => acc +
-  `${index+1}. ${title} -> <b>${moment(expired_at).calendar()}</b>\n`, ``) || 'Нет незавершенных';
-
-  bot.sendMessage(chat_id, `${text}`, opts);
+  let text = ``;
+  let index = 1;
+  for (const {title, expired_at, id: dispute_id} of disputes) {
+    text += `${index++}. <b>${title}</b>\n`;
+    text += await generateDisputeResults({dispute_id});
+    text += await generateDisputeExpired({expired_at});
+  }
+  bot.sendMessage(chat_id, `${text || `Нет незавершенных`}`, opts);
 });
 
 async function generateDisputeResults({dispute_id}) {
@@ -229,15 +213,19 @@ async function generateDisputeResults({dispute_id}) {
 
   let text = '';
   if (!!yesUsers)
-    text += `Да, согласен: ${yesUsers}`;
+    text += `Да, согласен: ${yesUsers}\n`;
   if (!!noUsers)
-    text += `Нет, не согласен: ${noUsers}`;
+    text += `Нет, не согласен: ${noUsers}\n`;
 
   return text;
 }
 
 function generateDisputeTitle({from, title}) {
   return `@${getUserName(from)} спорит что <b>${title}</b>\n`
+}
+
+function generateDisputeExpired({expired_at}) {
+  return expired_at ? `Дата завершения: <b>${moment(expired_at).calendar()}</b>\n` : '';
 }
 
 function log(text, params = '') {

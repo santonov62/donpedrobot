@@ -1,6 +1,5 @@
 const DELAY_MINUTES = 4 * 60000;
 const disputeService = require('../../backend/src/service/dispute.service');
-const answerService = require('../../backend/src/service/answer.service');
 const {bot, generateDisputeResults} = require('./bot');
 
 function start() {
@@ -23,7 +22,7 @@ async function check() {
       chat_id: chat_id,
       reply_to_message_id: message_id,
     };
-    let text = `<b>Спор окончен</b>\nРезультаты:\n`;
+    let text = `<b>Спор окончен</b>\n${title}\n`;
     text += await generateDisputeResults({dispute_id});
     try {
       await bot.sendMessage(chat_id, text, opts);
