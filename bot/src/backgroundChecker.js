@@ -22,9 +22,10 @@ async function check() {
       chat_id: chat_id,
       reply_to_message_id: message_id,
     };
-    let text = `<b>Спор окончен</b>\n`;
-    // text += `${generateDisputeTitle({username, title})}`;
-    text += `${title}\n`;
+    let text = ``;
+    text += `${generateDisputeTitle({username, title})}`;
+    text += `<b>Спор окончен</b>\n`;
+    // text += `${title}\n`;
     text += await generateDisputeResults({dispute_id});
     try {
       await bot.sendMessage(chat_id, text, opts);
