@@ -194,8 +194,8 @@ bot.onText(/\/disputes/, async (message, match) => {
   let index = 1;
   for (const {title, expired_at, id: dispute_id} of disputes) {
     text += `${index++}. <b>${title}</b>\n`;
-    text += await generateDisputeResults({dispute_id});
-    text += await generateDisputeExpired({expired_at});
+    text += `${await generateDisputeResults({dispute_id})}`;
+    text += `${await generateDisputeExpired({expired_at})}`;
   }
   bot.sendMessage(chat_id, `${text || `Нет незавершенных`}`, opts);
 });
