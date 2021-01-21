@@ -34,12 +34,13 @@ bot.onText(/^@don_pedrobot+\b$/, async (message, match) => {
 bot.onText(/([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим|@don_pedrobot) (.+)/, async (message, match) => {
   const { from } = message;
   const chatId = message.chat.id;
-  const title = match[2]; // the captured "whatever"
+  const title = match[2];
+  const username = getUserName(from);
   if (!title)
     return;
-  const text = generateDisputeTitle({from, title});
+  const text = generateDisputeTitle({username, title});
 
-  let dispute = await disputeService.add({title, chat_id: chatId});
+  let dispute = await disputeService.add({title, chat_id: chatId, username});
   const opts = {
     parse_mode: "HTML",
     reply_markup: JSON.stringify({
@@ -113,7 +114,8 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
     message_id,
     reply_markup
   };
-  let text = await generateDisputeTitle({from, title: dispute.title});
+
+  let text = await generateDisputeTitle({username: dispute.username, title: dispute.title});
   text += await generateDisputeResults({dispute_id});
   text += await generateDisputeExpired(dispute);
   bot.editMessageText(text, opts);
@@ -192,10 +194,10 @@ bot.onText(/\/disputes/, async (message, match) => {
   const disputes = await disputeService.getOpened({chat_id});
   let text = ``;
   let index = 1;
-  for (const {title, expired_at, id: dispute_id} of disputes) {
-    text += `${index++}. <b>${title}</b>\n`;
+  for (const {title, expired_at, id: dispute_id, username} of disputes) {
+    text += `${index++}. ${generateDisputeTitle({title, username})}`;
     text += `${await generateDisputeResults({dispute_id})}`;
-    text += `${await generateDisputeExpired({expired_at})}`;
+    text += `${generateDisputeExpired({expired_at})}`;
   }
   bot.sendMessage(chat_id, `${text || `Нет незавершенных`}`, opts);
 });
@@ -220,8 +222,10 @@ async function generateDisputeResults({dispute_id}) {
   return text;
 }
 
-function generateDisputeTitle({from, title}) {
-  return `@${getUserName(from)} спорит что <b>${title}</b>\n`
+function generateDisputeTitle({username, title}) {
+  if (!!username)
+    return `@${username} спорит что <b>${title}</b>\n`;
+  return `<b>${title}</b>\n`;
 }
 
 function generateDisputeExpired({expired_at}) {

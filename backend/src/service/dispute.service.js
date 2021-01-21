@@ -37,17 +37,18 @@ const getOpened = async ({chat_id}) => {
 }
 
 const ADD_DISPUTE = `INSERT INTO disputes (
-    "title", "expired_at", "chat_id", "message_id"
+    "title", "expired_at", "chat_id", "message_id", "username"
 ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5
 ) RETURNING *`;
 
-const add = async ({title, expired_at, chat_id, message_id}) => {
+const add = async ({title, expired_at, chat_id, message_id, username}) => {
   const result = await db.query(ADD_DISPUTE, [
     title,
     expired_at,
     chat_id,
-    message_id
+    message_id,
+    username
   ]);
   log('add -> ', result.rows[0]);
   return result.rows[0];
