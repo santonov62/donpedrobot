@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "start": "../node_modules/.bin/nf run node src/index.js",
+    "start-backend": "../node_modules/.bin/nf run node src/index.js",
     "db-rollback": "../node_modules/.bin/nf run node_modules/.bin/knex migrate:rollback",
     "db-latest": "../node_modules/.bin/nf run node_modules/.bin/knex migrate:latest",
     "db-change": "../node_modules/.bin/nf run node_modules/.bin/knex migrate:make",
