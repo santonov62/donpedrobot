@@ -5,20 +5,17 @@ const fetch = require('node-fetch');
 const PAY_TO_ME_API_KEY = process.env.PAY_TO_ME_API_KEY;
 const PAY_TO_ME_SECRET_KEY = process.env.PAY_TO_ME_SECRET_KEY;
 
-// const bb = require('express-busboy');
-// bb.extend(app);
-
 if (!PAY_TO_ME_API_KEY) {
-  console.error('WARNING!: Please set PAY_TO_ME_API_KEY to .env file for correct running the app.');
+  console.error('ERROR: PAY_TO_ME_API_KEY env prop required!');
 }
 
 if (!PAY_TO_ME_SECRET_KEY) {
-  console.error('WARNING!: Please set PAY_TO_ME_SECRET_KEY to .env file for correct running the app.');
+  console.error('ERROR: PAY_TO_ME_SECRET_KEY env prop required!');
 }
 
 const callback = (req, res) => {
   try {
-    console.group('[pay.controller] -> onCallback')
+    console.group('[pay.controller] -> callback')
     const params = req.body;
     log('params: ', params);
     // res.json('ok');
@@ -44,6 +41,7 @@ const callback = (req, res) => {
 //     "order_fulldesc":"Покупка промокода ID 19",
 //     "order_id":"19-0-0-1558615726520"
 // }
+// {"create_date":"2021-01-21T18:55:47.773Z","order_amount":10,"object_id":"32ad2fa96dda3f8fe45f2acba5a88400","order_id":1611255345894,"id":609925,"expire_date":"2022-01-16T18:55:47.773Z","update_date":"2021-01-21T18:55:48.174Z","order_fulldesc":"findpromo.ru","redirect":"https://api.paytodo.ru/api/v3/deals/32ad2fa96dda3f8fe45f2acba5a88400/","phone":"188000590109","status":"created","order_desc":"findpromo.ru"}
 const create = async (req, res) => {
   try {
     console.group('[pay.controller] -> create')
@@ -75,6 +73,7 @@ const create = async (req, res) => {
         .then(res => res.json());
     res.json(payment);
   } catch (e) {
+    log('ERROR! ', e.message);
     res.send(e.message);
   } finally {
     console.groupEnd();
@@ -87,6 +86,7 @@ const success = async (req, res) => {
     const params = req.body;
     res.send('success');
   } catch (e) {
+    log('ERROR! ', e.message);
     res.send(e.message);
   } finally {
     console.groupEnd();
@@ -99,6 +99,7 @@ const failed = async (req, res) => {
     const params = req.body;
     res.send('failed');
   } catch (e) {
+    log('ERROR! ', e.message);
     res.send(e.message);
   } finally {
     console.groupEnd();
