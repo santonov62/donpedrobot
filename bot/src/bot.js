@@ -44,34 +44,15 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
   const opts = {
     parse_mode: "HTML",
     reply_markup: JSON.stringify({
-      inline_keyboard: [
-        [
-          {
-            text: 'Да, согласен',
-            callback_data: JSON.stringify({
-              dispute_id: dispute.id,
-              action: 'answer',
-              value: "yes"
-            })
-          },
-          {
-            text: 'Нет, не согласен',
-            callback_data: JSON.stringify({
-              dispute_id: dispute.id,
-              action: 'answer',
-              value: "no"
-            })
-          },
-        ]
-      ]
+      inline_keyboard: getDisputeButtons({dispute_id: dispute.id})
     })
   };
 
   const {message_id} = await bot.sendMessage(chatId, `${text}`, opts);
   dispute = await disputeService.save({ ...dispute, message_id});
-  setTimeout(() => {
+  // setTimeout(() => {
     sendWhenExpiredDispute(dispute);
-  }, REQUEST_EXPIRED_AFTER_MINUTES * 60000);
+  // }, REQUEST_EXPIRED_AFTER_MINUTES * 60000);
 });
 
 bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
@@ -93,13 +74,15 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
       }
     }
     if (action === 'expired') {
-      reply_markup = message.reply_to_message.reply_markup;
+      // reply_markup = message.reply_to_message.reply_markup;
       const opts = {
         parse_mode: "HTML",
         chat_id: chat_id,
         message_id: message.message_id,
-        reply_to_message_id: message_id,
-        reply_markup: message.reply_markup
+        // reply_to_message_id: message_id,
+        reply_markup: JSON.stringify({
+          inline_keyboard: getExpiredButtons({dispute_id})
+        })
       };
       const expired_at = moment.unix(value);
       dispute = await disputeService.save({...dispute, expired_at});
@@ -113,7 +96,9 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
       parse_mode: "HTML",
       chat_id,
       message_id,
-      reply_markup
+      reply_markup: JSON.stringify({
+        inline_keyboard: getDisputeButtons({dispute_id})
+      })
     };
 
     let text = await generateDisputeTitle({username: dispute.username, title: dispute.title});
@@ -129,64 +114,9 @@ function sendWhenExpiredDispute({id: dispute_id, chat_id, message_id}) {
   bot.sendMessage(chat_id, `Когда показать результаты?`, {
     parse_mode: "HTML",
     chat_id,
-    reply_to_message_id: message_id,
+    // reply_to_message_id: message_id,
     reply_markup: JSON.stringify({
-      inline_keyboard: [
-        [
-          {
-            text: 'Через 10 мин',
-            callback_data: JSON.stringify({
-              dispute_id: dispute_id,
-              action: 'expired',
-              value: moment().add(10, 'minutes').unix()
-            })
-          },
-          {
-            text: 'Через час',
-            callback_data: JSON.stringify({
-              dispute_id: dispute_id,
-              action: 'expired',
-              value: moment().add(1, 'hours').unix()
-            })
-          }
-        ],
-        [
-          {
-            text: 'Завтра',
-            callback_data: JSON.stringify({
-              dispute_id: dispute_id,
-              action: 'expired',
-              value: moment().add(1, 'days').unix()
-            })
-          },
-          {
-            text: 'Послезавтра',
-            callback_data: JSON.stringify({
-              dispute_id: dispute_id,
-              action: 'expired',
-              value: moment().add(2, 'days').unix()
-            })
-          }
-        ],
-        [
-          {
-            text: 'Через неделю',
-            callback_data: JSON.stringify({
-              dispute_id: dispute_id,
-              action: 'expired',
-              value: moment().add(7, 'days').unix()
-            })
-          },
-          {
-            text: 'Через месяц',
-            callback_data: JSON.stringify({
-              dispute_id: dispute_id,
-              action: 'expired',
-              value: moment().add(1, 'month').unix()
-            })
-          }
-        ]
-      ]
+      inline_keyboard: getExpiredButtons({dispute_id})
     })
   });
 }
@@ -194,16 +124,21 @@ function sendWhenExpiredDispute({id: dispute_id, chat_id, message_id}) {
 bot.onText(/\/disputes/, async (message, match) => {
   const { from } = message;
   const chat_id = message.chat.id;
-  const opts = {parse_mode: "HTML"}
   const disputes = await disputeService.getOpened({chat_id});
-  let text = ``;
   let index = 1;
-  for (const {title, expired_at, id: dispute_id, username} of disputes) {
-    text += `${index++}. ${generateDisputeTitle({title, username})}`;
+  for (const {title, expired_at, id: dispute_id, username, message_id} of disputes) {
+    let text = ``;
+    const opts = {
+      parse_mode: "HTML",
+      reply_to_message_id: message_id
+    }
+    text += `<b>${index++}.</b> ${generateDisputeTitle({title, username})}`;
     text += `${await generateDisputeResults({dispute_id})}`;
     text += `${generateDisputeExpired({expired_at})}`;
+    await bot.sendMessage(chat_id, `${text}`, opts)
   }
-  bot.sendMessage(chat_id, `${text || `Нет незавершенных`}`, opts);
+  if (!disputes || disputes.length === 0)
+    bot.sendMessage(chat_id, `Нет незавершенных`, {parse_mode: "HTML"});
 });
 
 async function generateDisputeResults({dispute_id}) {
@@ -242,6 +177,88 @@ function log(text, params = '') {
 
 function getUserName (from) {
   return from.username || `${from.first_name} ${from.last_name}`
+}
+
+function getDisputeButtons({dispute_id}) {
+  return [
+    [
+      {
+        text: 'Да, согласен',
+        callback_data: JSON.stringify({
+          dispute_id: dispute_id,
+          action: 'answer',
+          value: "yes"
+        })
+      },
+      {
+        text: 'Нет, не согласен',
+        callback_data: JSON.stringify({
+          dispute_id: dispute_id,
+          action: 'answer',
+          value: "no"
+        })
+      },
+    ]
+  ]
+}
+
+function getExpiredButtons({dispute_id}) {
+  return [
+    [
+      {
+        text: 'Через 10 мин',
+        callback_data: JSON.stringify({
+          dispute_id: dispute_id,
+          action: 'expired',
+          value: moment().add(10, 'minutes').unix()
+        })
+      },
+      {
+        text: 'Через час',
+        callback_data: JSON.stringify({
+          dispute_id: dispute_id,
+          action: 'expired',
+          value: moment().add(1, 'hours').unix()
+        })
+      }
+    ],
+    [
+      {
+        text: 'Завтра',
+        callback_data: JSON.stringify({
+          dispute_id: dispute_id,
+          action: 'expired',
+          value: moment().add(1, 'days').unix()
+        })
+      },
+      {
+        text: 'Послезавтра',
+        callback_data: JSON.stringify({
+          dispute_id: dispute_id,
+          action: 'expired',
+          value: moment().add(2, 'days').unix()
+        })
+      }
+    ],
+    [
+      {
+        text: 'Через неделю',
+        callback_data: JSON.stringify({
+          dispute_id: dispute_id,
+          action: 'expired',
+          value: moment().add(7, 'days').unix()
+        })
+      },
+      {
+        text: 'Через месяц',
+        callback_data: JSON.stringify({
+          dispute_id: dispute_id,
+          action: 'expired',
+          value: moment().add(1, 'month').unix()
+        })
+      }
+    ]
+  ]
 }
 
 log('STARTED!');
