@@ -84,7 +84,9 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
           inline_keyboard: getExpiredButtons({dispute_id})
         })
       };
-      const expired_at = moment.unix(value);
+      // const expired_at = moment.unix(value);
+      const [count, type] = value.split('_');
+      const expired_at = moment().add(count, type);
       dispute = await disputeService.save({...dispute, expired_at});
       let text = `${message.text}\n`;
       text += `@${username} установил дату <b>${formatDate(expired_at)}</b>\n`;
@@ -209,7 +211,8 @@ function getExpiredButtons({dispute_id}) {
         callback_data: JSON.stringify({
           dispute_id: dispute_id,
           action: 'expired',
-          value: moment().add(10, 'minutes').unix()
+          // value: moment().add(10, 'minutes').unix()
+          value: '10_minutes'
         })
       },
       {
@@ -217,7 +220,7 @@ function getExpiredButtons({dispute_id}) {
         callback_data: JSON.stringify({
           dispute_id: dispute_id,
           action: 'expired',
-          value: moment().add(1, 'hours').unix()
+          value: '1_hours'
         })
       }
     ],
@@ -227,7 +230,7 @@ function getExpiredButtons({dispute_id}) {
         callback_data: JSON.stringify({
           dispute_id: dispute_id,
           action: 'expired',
-          value: moment().add(1, 'days').unix()
+          value: '1_days'
         })
       },
       {
@@ -235,7 +238,7 @@ function getExpiredButtons({dispute_id}) {
         callback_data: JSON.stringify({
           dispute_id: dispute_id,
           action: 'expired',
-          value: moment().add(2, 'days').unix()
+          value: '2_days'
         })
       }
     ],
@@ -245,7 +248,7 @@ function getExpiredButtons({dispute_id}) {
         callback_data: JSON.stringify({
           dispute_id: dispute_id,
           action: 'expired',
-          value: moment().add(7, 'days').unix()
+          value: '7_days'
         })
       },
       {
@@ -253,7 +256,7 @@ function getExpiredButtons({dispute_id}) {
         callback_data: JSON.stringify({
           dispute_id: dispute_id,
           action: 'expired',
-          value: moment().add(1, 'month').unix()
+          value: '1_month'
         })
       }
     ]
