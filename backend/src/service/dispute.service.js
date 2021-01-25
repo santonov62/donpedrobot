@@ -14,13 +14,13 @@ const getExpired = async () => {
   return result.rows;
 }
 
-const DISPUTE_BY_ID = `SELECT * FROM disputes 
-WHERE "id" = $1`;
-const getById = async ({id}) => {
-  const result = await db.query(DISPUTE_BY_ID, [id]);
-  log(`getById ${id}`, result.rows[0]);
-  return result.rows[0];
-}
+// const DISPUTE_BY_ID = `SELECT * FROM disputes
+// WHERE "id" = $1`;
+// const getById = async ({id}) => {
+//   const result = await db.query(DISPUTE_BY_ID, [id]);
+//   log(`getById ${id}`, result.rows[0]);
+//   return result.rows[0];
+// }
 
 const DISPUTE_BY_CHAT_ID = `SELECT * FROM disputes 
 WHERE "chat_id" = $1`;
@@ -28,6 +28,21 @@ const getByChatId = async ({chat_id}) => {
   const result = await db.query(DISPUTE_BY_ID, [chat_id]);
   log(`getByChatId ${chat_id}`, result.rows);
   return result.rows;
+}
+
+const searchDisputes = async (params) => {
+  const operators = Object.entries(params).map(([key, value]) => ({[key]: value.toString()}));
+  const disputes = await Dispute.findAll({
+    where: {
+      [Op.and]: operators
+    }
+  });
+  log(`getDispute ${JSON.stringify(params)} -> `, disputes);
+  return disputes;
+}
+
+const getById = async ({id}) => {
+  return (await searchDisputes({id}))[0];
 }
 
 const getOpened = async ({chat_id}) => {
@@ -106,5 +121,6 @@ module.exports = {
   resolve,
   getById,
   getByChatId,
-  getOpened
+  getOpened,
+  searchDisputes
 };
