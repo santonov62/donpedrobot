@@ -33,11 +33,12 @@ const getByChatId = async ({chat_id}) => {
 const searchDisputes = async (params) => {
   const operators = Object.entries(params).map(([key, value]) => ({[key]: value.toString()}));
   const disputes = await Dispute.findAll({
+    raw: true,
     where: {
       [Op.and]: operators
     }
   });
-  log(`getDispute ${JSON.stringify(params)} -> `, disputes);
+  log(`searchDisputes ${JSON.stringify(params)} -> `, disputes);
   return disputes;
 }
 
@@ -60,8 +61,6 @@ const getOpened = async ({chat_id}) => {
       ]
     }
   });
-  // console.log(disputes.every(user => user instanceof Dispute)); // true
-  // console.log("All Disputes:", JSON.stringify(disputes, null, 2));
 
   log(`getOpened ${chat_id}`, disputes);
   return disputes;
@@ -98,6 +97,18 @@ const save = async ({id, expired_at, message_id}) => {
   return result.rows[0];
 };
 
+// const updateDispute = async ({id, expired_at, message_id}) => {
+const updateDispute = async (params) => {
+  const {id, ...data} = params;
+  const dispute = await Dispute.update({...data}, {
+    where: {
+      id
+    }
+  });
+  log(`updateDispute ${JSON.stringify(params)} -> `, dispute);
+  return dispute;
+};
+
 const UPDATE_DISPUTE_RESOLVE = `UPDATE disputes
 SET
   "resolved_at" = $2
@@ -114,6 +125,10 @@ const log = (text, params = '') => {
   console.log(`[disputes.service] -> ${text}`, JSON.stringify(params, null, 2));
 };
 
+function getOperators(params) {
+  return Object.entries(params).map(([key, value]) => ({[key]: value.toString()}));
+}
+
 module.exports = {
   add,
   save,
@@ -122,5 +137,6 @@ module.exports = {
   getById,
   getByChatId,
   getOpened,
-  searchDisputes
+  searchDisputes,
+  updateDispute
 };

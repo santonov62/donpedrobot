@@ -87,7 +87,8 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
       // const expired_at = moment.unix(value);
       const [count, type] = value.split('_');
       const expired_at = moment().add(count, type);
-      dispute = await disputeService.save({...dispute, expired_at});
+      // dispute = await disputeService.save({...dispute, expired_at});
+      dispute = await disputeService.updateDispute({...dispute, expired_at});
       let text = `${message.text}\n`;
       text += `@${username} установил дату <b>${formatDate(expired_at)}</b>\n`;
       await bot.editMessageText(text, opts);

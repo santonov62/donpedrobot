@@ -20,6 +20,7 @@ const Dispute = sequelize.define('dispute', {
   }
 }, {
   // Other model options go here
+  raw: true,
 });
 
 module.exports = Dispute;
