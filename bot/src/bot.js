@@ -49,7 +49,9 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
   };
 
   const {message_id} = await bot.sendMessage(chatId, `${text}`, opts);
-  dispute = await disputeService.save({ ...dispute, message_id});
+  // dispute = await disputeService.save({ ...dispute, message_id});
+  dispute.message_id = message_id;
+  dispute.save();
   // setTimeout(() => {
     sendWhenExpiredDispute(dispute);
   // }, REQUEST_EXPIRED_AFTER_MINUTES * 60000);
@@ -87,8 +89,8 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
       // const expired_at = moment.unix(value);
       const [count, type] = value.split('_');
       const expired_at = moment().add(count, type);
-      // dispute = await disputeService.save({...dispute, expired_at});
-      dispute = await disputeService.updateDispute({...dispute, expired_at});
+      dispute.expired_at = expired_at;
+      dispute.save();
       let text = `${message.text}\n`;
       text += `@${username} установил дату <b>${formatDate(expired_at)}</b>\n`;
       await bot.editMessageText(text, opts);
@@ -177,7 +179,7 @@ function log(text, params = '') {
   console.log(`[bot] -> ${text}`, params);
 }
 
-function getUserName (from) {
+function getUserName(from) {
   return from.username || `${from.first_name} ${from.last_name}`
 }
 

@@ -33,7 +33,7 @@ const getByChatId = async ({chat_id}) => {
 const searchDisputes = async (params) => {
   const operators = Object.entries(params).map(([key, value]) => ({[key]: value.toString()}));
   const disputes = await Dispute.findAll({
-    raw: true,
+    // raw: true,
     where: {
       [Op.and]: operators
     }
@@ -66,22 +66,27 @@ const getOpened = async ({chat_id}) => {
   return disputes;
 }
 
-const ADD_DISPUTE = `INSERT INTO disputes (
-    "title", "expired_at", "chat_id", "message_id", "username"
-) VALUES (
-    $1, $2, $3, $4, $5
-) RETURNING *`;
-
+// const ADD_DISPUTE = `INSERT INTO disputes (
+//     "title", "expired_at", "chat_id", "message_id", "username"
+// ) VALUES (
+//     $1, $2, $3, $4, $5
+// ) RETURNING *`;
+//
+// const add = async ({title, expired_at, chat_id, message_id, username}) => {
+//   const result = await db.query(ADD_DISPUTE, [
+//     title,
+//     expired_at,
+//     chat_id,
+//     message_id,
+//     username
+//   ]);
+//   log('add -> ', result.rows[0]);
+//   return result.rows[0];
+// };
 const add = async ({title, expired_at, chat_id, message_id, username}) => {
-  const result = await db.query(ADD_DISPUTE, [
-    title,
-    expired_at,
-    chat_id,
-    message_id,
-    username
-  ]);
-  log('add -> ', result.rows[0]);
-  return result.rows[0];
+  const dispute = await Dispute.create({title, expired_at, chat_id, message_id, username});
+  log('add -> ', dispute);
+  return dispute;
 };
 
 const UPDATE_DISPUTE_EXPIRED = `UPDATE disputes
