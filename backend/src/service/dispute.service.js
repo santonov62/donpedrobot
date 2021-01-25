@@ -1,5 +1,7 @@
 const db = require('./db.service');
 const moment = require('moment');
+const Dispute = require('../model/dispute.model');
+const { Op } = require("sequelize");
 
 const EXPIRED_DISPUTES = `SELECT * FROM disputes 
 WHERE "expired_at" < $1 
@@ -28,12 +30,26 @@ const getByChatId = async ({chat_id}) => {
   return result.rows;
 }
 
-const OPENED_DISPUTE = `SELECT * FROM disputes 
-WHERE "resolved_at" IS NULL AND "chat_id" = $1`;
 const getOpened = async ({chat_id}) => {
-  const result = await db.query(OPENED_DISPUTE, [chat_id]);
-  log(`getOpened ${chat_id}`, result.rows);
-  return result.rows;
+  chat_id = chat_id.toString();
+  const disputes = await Dispute.findAll({
+    where: {
+      [Op.and]: [
+        {
+          chat_id
+        }, {
+          resolved_at: {
+            [Op.is]: null,
+          }
+        }
+      ]
+    }
+  });
+  // console.log(disputes.every(user => user instanceof Dispute)); // true
+  // console.log("All Disputes:", JSON.stringify(disputes, null, 2));
+
+  log(`getOpened ${chat_id}`, disputes);
+  return disputes;
 }
 
 const ADD_DISPUTE = `INSERT INTO disputes (
@@ -80,7 +96,7 @@ const resolve = async ({id}) => {
 };
 
 const log = (text, params = '') => {
-  console.log(`[disputes.service] -> ${text}`, params);
+  console.log(`[disputes.service] -> ${text}`, JSON.stringify(params, null, 2));
 };
 
 module.exports = {
