@@ -31,7 +31,7 @@ bot.onText(/^@don_pedrobot+\b$/, async (message, match) => {
   /disputes - Показать список незавершенных споров`, {parse_mode: "HTML"});
 });
 
-bot.onText(/([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим|@don_pedrobot) (.+)/, async (message, match) => {
+bot.onText(/([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим|@don_pedrobot),?\s(.+)/, async (message, match) => {
   const { from } = message;
   const chatId = message.chat.id;
   const title = match[2];
