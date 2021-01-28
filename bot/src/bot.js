@@ -123,6 +123,7 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
     }
     if (action === 'resolve') {
       dispute = await resolveDispute(dispute);
+      bot.deleteMessage(chat_id, message.message_id);
     }
 
     const opts = {
