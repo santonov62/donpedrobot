@@ -84,7 +84,7 @@ bot.onText(/\/disputes/, async (message, match) => {
     await bot.sendMessage(chat_id, `${text}`, opts)
   }
   if (!disputes || disputes.length === 0)
-    bot.sendMessage(chat_id, `Нет открытых споров`, {parse_mode: "HTML"});
+    bot.sendMessage(chat_id, `Ничего нет`, {parse_mode: "HTML"});
 });
 
 bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
@@ -142,7 +142,7 @@ async function updateDisputeMessage({id: dispute_id, chat_id, message_id, expire
 
   let text = await generateDisputeTitle({username, title});
   text += await generateDisputeResults({dispute_id});
-  text += await generateDisputeExpired({expired_at});
+  text += await generateDisputeExpired({expired_at, resolved_at});
   await bot.editMessageText(text, opts);
 }
 
@@ -182,12 +182,18 @@ function generateDisputeTitle({username, title}) {
   return `<b>${title}</b>\n`;
 }
 
-function generateDisputeExpired({expired_at}) {
+function generateDisputeExpired({expired_at, resolved_at}) {
+  if (!!resolved_at)
+    return `Завершен <b>${productionDayOffset(resolved_at).format('MMMM Do YYYY, h:mm')}</b>`;
   return expired_at ? `Дата завершения: <b>${formatDate(expired_at)}</b>\n` : '';
 }
 
+function productionDayOffset(date) {
+  return process.env.NODE_ENV === 'production' ? moment(date).add(3, 'hours') : moment(date)
+}
+
 function formatDate(date) {
-  return process.env.NODE_ENV === 'production' ? moment(date).add(3, 'hours').calendar() : moment(date).calendar();
+  return productionDayOffset(date).calendar();
 }
 
 async function resolveDispute({id: dispute_id, title, chat_id, message_id, username}) {
@@ -198,7 +204,7 @@ async function resolveDispute({id: dispute_id, title, chat_id, message_id, usern
   };
   let text = ``;
   text += `${generateDisputeTitle({username, title})}`;
-  text += `<b>Спор окончен</b>\n`;
+  text += `<b>Спор завершен</b>\n`;
   text += await generateDisputeResults({dispute_id});
   try {
     await bot.sendMessage(chat_id, text, opts);
