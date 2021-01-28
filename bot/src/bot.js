@@ -60,28 +60,33 @@ bot.onText(/\/disputes/, async (message, match) => {
   const disputes = await disputeService.getOpened({chat_id});
   let index = 1;
   for (const {title, expired_at, id: dispute_id, username, message_id} of disputes) {
-    let text = ``;
-    const opts = {
-      parse_mode: "HTML",
-      reply_to_message_id: message_id,
-      reply_markup: JSON.stringify({
-        inline_keyboard: [
-          [
-            {
-              text: 'завершить',
-              callback_data: JSON.stringify({
-                dispute_id: dispute_id,
-                action: 'resolve'
-              })
-            },
+    try {
+      let text = ``;
+      const opts = {
+        parse_mode: "HTML",
+        reply_to_message_id: message_id,
+        reply_markup: JSON.stringify({
+          inline_keyboard: [
+            [
+              {
+                text: 'завершить',
+                callback_data: JSON.stringify({
+                  dispute_id: dispute_id,
+                  action: 'resolve'
+                })
+              },
+            ]
           ]
-        ]
-      })
+        })
+      }
+      text += `<b>${index++}.</b> ${generateDisputeTitle({title, username})}`;
+      text += `${await generateDisputeResults({dispute_id})}`;
+      text += `${generateDisputeExpired({expired_at})}`;
+      await bot.sendMessage(chat_id, `${text}`, opts)
+    } catch (e) {
+      log(`ERROR: `, e.message);
+      await disputeService.resolve({id: dispute_id});
     }
-    text += `<b>${index++}.</b> ${generateDisputeTitle({title, username})}`;
-    text += `${await generateDisputeResults({dispute_id})}`;
-    text += `${generateDisputeExpired({expired_at})}`;
-    await bot.sendMessage(chat_id, `${text}`, opts)
   }
   if (!disputes || disputes.length === 0)
     bot.sendMessage(chat_id, `Ничего нет`, {parse_mode: "HTML"});
