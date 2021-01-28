@@ -84,7 +84,7 @@ bot.onText(/\/disputes/, async (message, match) => {
     await bot.sendMessage(chat_id, `${text}`, opts)
   }
   if (!disputes || disputes.length === 0)
-    bot.sendMessage(chat_id, `Нет незавершенных`, {parse_mode: "HTML"});
+    bot.sendMessage(chat_id, `Нет открытых споров`, {parse_mode: "HTML"});
 });
 
 bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
@@ -186,8 +186,29 @@ function generateDisputeExpired({expired_at}) {
   return expired_at ? `Дата завершения: <b>${formatDate(expired_at)}</b>\n` : '';
 }
 
-function log(text, params = '') {
-  console.log(`[bot] -> ${text}`, params);
+function formatDate(date) {
+  return process.env.NODE_ENV === 'production' ? moment(date).add(3, 'hours').calendar() : moment(date).calendar();
+}
+
+async function resolveDispute({id: dispute_id, title, chat_id, message_id, username}) {
+  const opts = {
+    parse_mode: "HTML",
+    chat_id: chat_id,
+    reply_to_message_id: message_id,
+  };
+  let text = ``;
+  text += `${generateDisputeTitle({username, title})}`;
+  text += `<b>Спор окончен</b>\n`;
+  text += await generateDisputeResults({dispute_id});
+  try {
+    await bot.sendMessage(chat_id, text, opts);
+  } catch(e) {
+    log('ERROR: ', e.message);
+  } finally {
+    const dispute = await disputeService.resolve({id: dispute_id});
+    await updateDisputeMessage(dispute);
+    bot.unpinChatMessage(chat_id, {message_id});
+  }
 }
 
 function _getUserName (from) {
@@ -277,29 +298,8 @@ function _getExpiredButtons({dispute_id}) {
   ]
 }
 
-function formatDate(date) {
-  return process.env.NODE_ENV === 'production' ? moment(date).add(3, 'hours').calendar() : moment(date).calendar();
-}
-
-async function resolveDispute({id: dispute_id, title, chat_id, message_id, username}) {
-  const opts = {
-    parse_mode: "HTML",
-    chat_id: chat_id,
-    reply_to_message_id: message_id,
-  };
-  let text = ``;
-  text += `${generateDisputeTitle({username, title})}`;
-  text += `<b>Спор окончен</b>\n`;
-  text += await generateDisputeResults({dispute_id});
-  try {
-    await bot.sendMessage(chat_id, text, opts);
-  } catch(e) {
-    log('ERROR: ', e.message);
-  } finally {
-    const dispute = await disputeService.resolve({id: dispute_id});
-    await updateDisputeMessage(dispute);
-    bot.unpinChatMessage(chat_id, {message_id});
-  }
+function log(text, params = '') {
+  console.log(`[bot] -> ${text}`, params);
 }
 
 log('STARTED!');
