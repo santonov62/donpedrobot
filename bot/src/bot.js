@@ -61,7 +61,6 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
     const {value, action, dispute_id, title} = JSON.parse(data);
     const chat_id = message.chat.id;
     const username = getUserName(from);
-    let {reply_markup} = message;
 
     let dispute = await disputeService.getById({id: dispute_id});
     const {message_id} = dispute;
@@ -74,15 +73,13 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
       }
     }
     if (action === 'expired') {
-      // reply_markup = message.reply_to_message.reply_markup;
       const opts = {
         parse_mode: "HTML",
         chat_id: chat_id,
         message_id: message.message_id,
-        // reply_to_message_id: message_id,
-        reply_markup: JSON.stringify({
-          inline_keyboard: getExpiredButtons({dispute_id})
-        })
+        // reply_markup: JSON.stringify({
+        //   inline_keyboard: getExpiredButtons({dispute_id})
+        // })
       };
       // const expired_at = moment.unix(value);
       const [count, type] = value.split('_');
