@@ -95,7 +95,6 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
     const username = _getUserName(from);
 
     let dispute = await disputeService.getById({id: dispute_id});
-    const {message_id} = dispute;
     if (action === 'answer') {
       let answer = await answerService.search({dispute_id, username});
       if (answer) {
@@ -103,15 +102,13 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
       } else {
         await answerService.add({value, dispute_id, username});
       }
+      await updateDisputeMessage(dispute);
     }
     if (action === 'expired') {
       const opts = {
         parse_mode: "HTML",
         chat_id: chat_id,
         message_id: message.message_id,
-        // reply_markup: JSON.stringify({
-        //   inline_keyboard: getExpiredButtons({dispute_id})
-        // })
       };
       // const expired_at = moment.unix(value);
       const [count, type] = value.split('_');
@@ -120,31 +117,34 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
       // let text = `${message.text}\n`;
       const text = `@${username} установил дату завершения спора <b>${formatDate(expired_at)}</b>\n`;
       await bot.editMessageText(text, opts);
+      await updateDisputeMessage(dispute);
     }
     if (action === 'resolve') {
-      dispute = await resolveDispute(dispute);
+      await resolveDispute(dispute);
       bot.deleteMessage(chat_id, message.message_id);
     }
-
-    const opts = {
-      parse_mode: "HTML",
-      chat_id,
-      message_id,
-    };
-    if (!dispute.resolved_at) {
-      opts.reply_markup = JSON.stringify({
-        inline_keyboard: _getDisputeButtons({dispute_id})
-      })
-    }
-
-    let text = await generateDisputeTitle({username: dispute.username, title: dispute.title});
-    text += await generateDisputeResults({dispute_id});
-    text += await generateDisputeExpired(dispute);
-    await bot.editMessageText(text, opts);
   } catch (e) {
     log(`ERROR: `, e.message);
   }
 });
+
+async function updateDisputeMessage({id: dispute_id, chat_id, message_id, expired_at, title, username, resolved_at}) {
+  const opts = {
+    parse_mode: "HTML",
+    chat_id,
+    message_id,
+  };
+  if (!resolved_at) {
+    opts.reply_markup = JSON.stringify({
+      inline_keyboard: _getDisputeButtons({dispute_id})
+    })
+  }
+
+  let text = await generateDisputeTitle({username, title});
+  text += await generateDisputeResults({dispute_id});
+  text += await generateDisputeExpired({expired_at});
+  await bot.editMessageText(text, opts);
+}
 
 function sendWhenExpiredDispute({id: dispute_id, chat_id, message_id}) {
   bot.sendMessage(chat_id, `Когда показать результаты?`, {
@@ -282,7 +282,6 @@ function formatDate(date) {
 }
 
 async function resolveDispute({id: dispute_id, title, chat_id, message_id, username}) {
-  let resolvedDispute;
   const opts = {
     parse_mode: "HTML",
     chat_id: chat_id,
@@ -297,10 +296,10 @@ async function resolveDispute({id: dispute_id, title, chat_id, message_id, usern
   } catch(e) {
     log('ERROR: ', e.message);
   } finally {
-    resolvedDispute = await disputeService.resolve({id: dispute_id});
+    const dispute = await disputeService.resolve({id: dispute_id});
+    await updateDisputeMessage(dispute);
     bot.unpinChatMessage(chat_id, {message_id});
   }
-  return resolvedDispute;
 }
 
 log('STARTED!');
@@ -309,5 +308,6 @@ module.exports = {
   bot,
   generateDisputeTitle,
   generateDisputeResults,
-  resolveDispute
+  resolveDispute,
+  updateDisputeMessage
 }
