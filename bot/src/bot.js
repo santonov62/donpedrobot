@@ -51,7 +51,7 @@ bot.onText(/([Сс]порим на баночку|[Нн]а баночку что
   const {message_id} = await bot.sendMessage(chat_id, `${text}`, opts);
   dispute = await disputeService.save({ ...dispute, message_id});
   sendWhenExpiredDispute(dispute);
-  await bot.pinChatMessage(chat_id, message_id,true);
+  bot.pinChatMessage(chat_id, message_id,{disable_notification: true});
 });
 
 bot.onText(/\/disputes/, async (message, match) => {
