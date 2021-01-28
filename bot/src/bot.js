@@ -122,7 +122,7 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
       await bot.editMessageText(text, opts);
     }
     if (action === 'resolve') {
-      dispute = await resolvedDispute(dispute);
+      dispute = await resolveDispute(dispute);
     }
 
     const opts = {
@@ -278,7 +278,7 @@ function formatDate(date) {
   return process.env.NODE_ENV === 'production' ? moment(date).add(3, 'hours').calendar() : moment(date).calendar();
 }
 
-async function resolvedDispute({id: dispute_id, title, chat_id, message_id, username}) {
+async function resolveDispute({id: dispute_id, title, chat_id, message_id, username}) {
   let resolvedDispute;
   const opts = {
     parse_mode: "HTML",
@@ -295,8 +295,9 @@ async function resolvedDispute({id: dispute_id, title, chat_id, message_id, user
     log('ERROR: ', e.message);
   } finally {
     resolvedDispute = await disputeService.resolve({id: dispute_id});
-    await bot.unpinChatMessage(chat_id, {message_id});
+    bot.unpinChatMessage(chat_id, {message_id});
   }
+  return resolvedDispute;
 }
 
 log('STARTED!');
@@ -305,5 +306,5 @@ module.exports = {
   bot,
   generateDisputeTitle,
   generateDisputeResults,
-  resolvedDispute
+  resolvedDispute: resolveDispute
 }
