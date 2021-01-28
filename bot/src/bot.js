@@ -306,5 +306,5 @@ module.exports = {
   bot,
   generateDisputeTitle,
   generateDisputeResults,
-  resolvedDispute: resolveDispute
+  resolveDispute
 }

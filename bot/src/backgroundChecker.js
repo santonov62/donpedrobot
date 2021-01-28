@@ -4,7 +4,7 @@ const {
   bot,
   generateDisputeResults,
   generateDisputeTitle,
-  resolvedDispute} = require('./bot');
+  resolveDispute} = require('./bot');
 
 function start() {
   check();
@@ -22,7 +22,7 @@ async function check() {
   log('Disputes', disputes);
   // for (const {id: dispute_id, title, chat_id, message_id, username} of disputes) {
   for (const dispute of disputes) {
-    await resolvedDispute(dispute);
+    await resolveDispute(dispute);
   };
 }
 
