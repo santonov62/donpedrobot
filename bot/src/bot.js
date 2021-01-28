@@ -129,10 +129,12 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
       parse_mode: "HTML",
       chat_id,
       message_id,
-      reply_markup: JSON.stringify({
+    };
+    if (!dispute.resolved_at) {
+      opts.reply_markup = JSON.stringify({
         inline_keyboard: _getDisputeButtons({dispute_id})
       })
-    };
+    }
 
     let text = await generateDisputeTitle({username: dispute.username, title: dispute.title});
     text += await generateDisputeResults({dispute_id});
