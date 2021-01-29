@@ -33,26 +33,63 @@ bot.onText(/^@don_pedrobot+\b$/, async (message, match) => {
 
 bot.onText(/([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим|@don_pedrobot),?\s(.+)/, async (message, match) => {
   const { from } = message;
-  const chatId = message.chat.id;
+  const chat_id = message.chat.id;
   const title = match[2];
-  const username = getUserName(from);
+  const username = _getUserName(from);
   if (!title)
     return;
   const text = generateDisputeTitle({username, title});
 
-  let dispute = await disputeService.add({title, chat_id: chatId, username});
+  let dispute = await disputeService.add({title, chat_id, username});
   const opts = {
     parse_mode: "HTML",
     reply_markup: JSON.stringify({
-      inline_keyboard: getDisputeButtons({dispute_id: dispute.id})
+      inline_keyboard: _getDisputeButtons({dispute_id: dispute.id})
     })
   };
 
-  const {message_id} = await bot.sendMessage(chatId, `${text}`, opts);
+  const {message_id} = await bot.sendMessage(chat_id, `${text}`, opts);
   dispute = await disputeService.save({ ...dispute, message_id});
-  // setTimeout(() => {
-    sendWhenExpiredDispute(dispute);
-  // }, REQUEST_EXPIRED_AFTER_MINUTES * 60000);
+  sendWhenExpiredDispute(dispute);
+  bot.pinChatMessage(chat_id, message_id,{disable_notification: true});
+});
+
+bot.onText(/\/disputes/, async (message, match) => {
+  const { from } = message;
+  const chat_id = message.chat.id;
+  const disputes = await disputeService.getOpened({chat_id});
+  let index = 1;
+  for (const {title, expired_at, id: dispute_id, username, message_id} of disputes) {
+    try {
+      let text = ``;
+      const opts = {
+        parse_mode: "HTML",
+        reply_to_message_id: message_id,
+        reply_markup: JSON.stringify({
+          inline_keyboard: [
+            [
+              {
+                text: 'завершить',
+                callback_data: JSON.stringify({
+                  dispute_id: dispute_id,
+                  action: 'resolve'
+                })
+              },
+            ]
+          ]
+        })
+      }
+      text += `<b>${index++}.</b> ${generateDisputeTitle({title, username})}`;
+      text += `${await generateDisputeResults({dispute_id})}`;
+      text += `${generateDisputeExpired({expired_at})}`;
+      await bot.sendMessage(chat_id, `${text}`, opts)
+    } catch (e) {
+      log(`ERROR: `, e.message);
+      await disputeService.resolve({id: dispute_id});
+    }
+  }
+  if (!disputes || disputes.length === 0)
+    bot.sendMessage(chat_id, `Ничего нет`, {parse_mode: "HTML"});
 });
 
 bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
@@ -60,10 +97,9 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
     const {data, message, from} = callbackQuery;
     const {value, action, dispute_id, title} = JSON.parse(data);
     const chat_id = message.chat.id;
-    const username = getUserName(from);
+    const username = _getUserName(from);
 
     let dispute = await disputeService.getById({id: dispute_id});
-    const {message_id} = dispute;
     if (action === 'answer') {
       let answer = await answerService.search({dispute_id, username});
       if (answer) {
@@ -71,15 +107,13 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
       } else {
         await answerService.add({value, dispute_id, username});
       }
+      await updateDisputeMessage(dispute);
     }
     if (action === 'expired') {
       const opts = {
         parse_mode: "HTML",
         chat_id: chat_id,
         message_id: message.message_id,
-        // reply_markup: JSON.stringify({
-        //   inline_keyboard: getExpiredButtons({dispute_id})
-        // })
       };
       // const expired_at = moment.unix(value);
       const [count, type] = value.split('_');
@@ -88,56 +122,44 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
       // let text = `${message.text}\n`;
       const text = `@${username} установил дату завершения спора <b>${formatDate(expired_at)}</b>\n`;
       await bot.editMessageText(text, opts);
+      await updateDisputeMessage(dispute);
     }
-
-    const opts = {
-      parse_mode: "HTML",
-      chat_id,
-      message_id,
-      reply_markup: JSON.stringify({
-        inline_keyboard: getDisputeButtons({dispute_id})
-      })
-    };
-
-    let text = await generateDisputeTitle({username: dispute.username, title: dispute.title});
-    text += await generateDisputeResults({dispute_id});
-    text += await generateDisputeExpired(dispute);
-    await bot.editMessageText(text, opts);
+    if (action === 'resolve') {
+      await resolveDispute(dispute);
+      bot.deleteMessage(chat_id, message.message_id);
+    }
   } catch (e) {
     log(`ERROR: `, e.message);
   }
 });
 
+async function updateDisputeMessage({id: dispute_id, chat_id, message_id, expired_at, title, username, resolved_at}) {
+  const opts = {
+    parse_mode: "HTML",
+    chat_id,
+    message_id,
+  };
+  if (!resolved_at) {
+    opts.reply_markup = JSON.stringify({
+      inline_keyboard: _getDisputeButtons({dispute_id})
+    })
+  }
+
+  let text = await generateDisputeTitle({username, title});
+  text += await generateDisputeResults({dispute_id});
+  text += await generateDisputeExpired({expired_at, resolved_at});
+  await bot.editMessageText(text, opts);
+}
+
 function sendWhenExpiredDispute({id: dispute_id, chat_id, message_id}) {
   bot.sendMessage(chat_id, `Когда показать результаты?`, {
     parse_mode: "HTML",
     chat_id,
-    // reply_to_message_id: message_id,
     reply_markup: JSON.stringify({
-      inline_keyboard: getExpiredButtons({dispute_id})
+      inline_keyboard: _getExpiredButtons({dispute_id})
     })
   });
 }
-
-bot.onText(/\/disputes/, async (message, match) => {
-  const { from } = message;
-  const chat_id = message.chat.id;
-  const disputes = await disputeService.getOpened({chat_id});
-  let index = 1;
-  for (const {title, expired_at, id: dispute_id, username, message_id} of disputes) {
-    let text = ``;
-    const opts = {
-      parse_mode: "HTML",
-      reply_to_message_id: message_id
-    }
-    text += `<b>${index++}.</b> ${generateDisputeTitle({title, username})}`;
-    text += `${await generateDisputeResults({dispute_id})}`;
-    text += `${generateDisputeExpired({expired_at})}`;
-    await bot.sendMessage(chat_id, `${text}`, opts)
-  }
-  if (!disputes || disputes.length === 0)
-    bot.sendMessage(chat_id, `Нет незавершенных`, {parse_mode: "HTML"});
-});
 
 async function generateDisputeResults({dispute_id}) {
   const answers = await answerService.getByDisputeId({dispute_id});
@@ -165,19 +187,46 @@ function generateDisputeTitle({username, title}) {
   return `<b>${title}</b>\n`;
 }
 
-function generateDisputeExpired({expired_at}) {
+function generateDisputeExpired({expired_at, resolved_at}) {
+  if (!!resolved_at)
+    return `Завершен <b>${productionDayOffset(resolved_at).format('MMMM Do YYYY, h:mm')}</b>`;
   return expired_at ? `Дата завершения: <b>${formatDate(expired_at)}</b>\n` : '';
 }
 
-function log(text, params = '') {
-  console.log(`[bot] -> ${text}`, params);
+function productionDayOffset(date) {
+  return process.env.NODE_ENV === 'production' ? moment(date).add(3, 'hours') : moment(date)
 }
 
-function getUserName (from) {
+function formatDate(date) {
+  return productionDayOffset(date).calendar();
+}
+
+async function resolveDispute({id: dispute_id, title, chat_id, message_id, username}) {
+  const opts = {
+    parse_mode: "HTML",
+    chat_id: chat_id,
+    reply_to_message_id: message_id,
+  };
+  let text = ``;
+  text += `${generateDisputeTitle({username, title})}`;
+  text += `<b>Спор завершен</b>\n`;
+  text += await generateDisputeResults({dispute_id});
+  try {
+    await bot.sendMessage(chat_id, text, opts);
+  } catch(e) {
+    log('ERROR: ', e.message);
+  } finally {
+    const dispute = await disputeService.resolve({id: dispute_id});
+    await updateDisputeMessage(dispute);
+    bot.unpinChatMessage(chat_id, {message_id});
+  }
+}
+
+function _getUserName (from) {
   return from.username || `${from.first_name} ${from.last_name}`
 }
 
-function getDisputeButtons({dispute_id}) {
+function _getDisputeButtons({dispute_id}) {
   return [
     [
       {
@@ -200,7 +249,7 @@ function getDisputeButtons({dispute_id}) {
   ]
 }
 
-function getExpiredButtons({dispute_id}) {
+function _getExpiredButtons({dispute_id}) {
   return [
     [
       {
@@ -260,8 +309,8 @@ function getExpiredButtons({dispute_id}) {
   ]
 }
 
-function formatDate(date) {
-  return process.env.NODE_ENV === 'production' ? moment(date).add(3, 'hours').calendar() : moment(date).calendar();
+function log(text, params = '') {
+  console.log(`[bot] -> ${text}`, params);
 }
 
 log('STARTED!');
@@ -269,5 +318,7 @@ log('STARTED!');
 module.exports = {
   bot,
   generateDisputeTitle,
-  generateDisputeResults
+  generateDisputeResults,
+  resolveDispute,
+  updateDisputeMessage
 }
