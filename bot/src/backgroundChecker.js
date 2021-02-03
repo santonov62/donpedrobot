@@ -21,7 +21,7 @@ async function check() {
   log('Disputes', disputes);
   // for (const {id: dispute_id, title, chat_id, message_id, username} of disputes) {
   for (const dispute of disputes) {
-    await resolveDispute(dispute);
+    await resolveDispute({dispute_id: dispute.id});
   };
 }
 
