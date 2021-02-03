@@ -126,7 +126,7 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
       await updateDisputeMessage(dispute);
     }
     if (action === 'resolve') {
-      await resolveDispute(dispute);
+      await resolveDispute({dispute_id: dispute.id});
       bot.deleteMessage(chat_id, message.message_id);
     }
   } catch (e) {
@@ -146,9 +146,6 @@ async function updateDisputeMessage({id: dispute_id, chat_id, message_id, expire
     })
   }
 
-  // let text = await generateDisputeTitle({username, title});
-  // text += await generateDisputeResults({dispute_id});
-  // text += await generateDisputeExpired({expired_at, resolved_at});
   const text = await generateDisputeMessage({username, title, dispute_id, expired_at, resolved_at});
   await bot.editMessageText(text, opts);
 }
@@ -198,7 +195,7 @@ function generateDisputeTitle({username, title}) {
 
 function generateDisputeExpired({expired_at, resolved_at}) {
   if (!!resolved_at)
-    return `Завершен <b>${productionDayOffset(resolved_at).format('MMMM Do YYYY, hh:mm')}</b>`;
+    return `Завершен <b>${productionDayOffset(resolved_at).format('MMMM Do YYYY, HH:mm')}</b>`;
   return expired_at ? `Дата завершения: <b>${formatDate(expired_at)}</b>\n` : '';
 }
 
@@ -210,16 +207,14 @@ function formatDate(date) {
   return productionDayOffset(date).calendar();
 }
 
-async function resolveDispute({id: dispute_id, title, chat_id, message_id, username, expired_at, resolved_at}) {
+async function resolveDispute({dispute_id}) {
+  const dispute = await disputeService.resolve({id: dispute_id});
+  const {title, chat_id, message_id, username, expired_at, resolved_at} = dispute;
   const opts = {
     parse_mode: "HTML",
     chat_id: chat_id
   };
-  // let text = ``;
-  // text += `${generateDisputeTitle({username, title})}`;
-  // text += `<b>Спор завершен</b>\n`;
-  // text += await generateDisputeResults({dispute_id});
-  let text = `<b>Сопр завершен</b>\n`;
+  let text = `<b>Спор завершен</b>\n`;
   text += await generateDisputeMessage({username, title, dispute_id, expired_at, resolved_at});
   try {
     await bot.sendMessage(chat_id, text, {...opts, reply_to_message_id: message_id,});
@@ -227,7 +222,6 @@ async function resolveDispute({id: dispute_id, title, chat_id, message_id, usern
     log('ERROR: ', e.message);
     await bot.sendMessage(chat_id, text, opts);
   } finally {
-    const dispute = await disputeService.resolve({id: dispute_id});
     await updateDisputeMessage(dispute);
     bot.unpinChatMessage(chat_id, {message_id});
   }
