@@ -195,7 +195,7 @@ function generateDisputeTitle({username, title}) {
 
 function generateDisputeExpired({expired_at, resolved_at}) {
   if (!!resolved_at)
-    return `Завершен <b>${productionDayOffset(resolved_at).format('MMMM Do YYYY, HH:mm')}</b>`;
+    return `Завершен <b>${productionDayOffset(resolved_at).format('Do MMMM YYYY, HH:mm')}</b>`;
   return expired_at ? `Дата завершения: <b>${formatDate(expired_at)}</b>\n` : '';
 }
 
