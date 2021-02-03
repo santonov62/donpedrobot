@@ -1,7 +1,5 @@
 const db = require('./db.service');
 const moment = require('moment');
-const Dispute = require('../model/dispute.model');
-const { Op } = require("sequelize");
 
 const EXPIRED_DISPUTES = `SELECT * FROM disputes 
 WHERE "expired_at" < $1 
@@ -14,13 +12,13 @@ const getExpired = async () => {
   return result.rows;
 }
 
-// const DISPUTE_BY_ID = `SELECT * FROM disputes
-// WHERE "id" = $1`;
-// const getById = async ({id}) => {
-//   const result = await db.query(DISPUTE_BY_ID, [id]);
-//   log(`getById ${id}`, result.rows[0]);
-//   return result.rows[0];
-// }
+const DISPUTE_BY_ID = `SELECT * FROM disputes 
+WHERE "id" = $1`;
+const getById = async ({id}) => {
+  const result = await db.query(DISPUTE_BY_ID, [id]);
+  log(`getById ${id}`, result.rows[0]);
+  return result.rows[0];
+}
 
 const DISPUTE_BY_CHAT_ID = `SELECT * FROM disputes 
 WHERE "chat_id" = $1`;
@@ -30,63 +28,30 @@ const getByChatId = async ({chat_id}) => {
   return result.rows;
 }
 
-const searchDisputes = async (params) => {
-  const operators = Object.entries(params).map(([key, value]) => ({[key]: value.toString()}));
-  const disputes = await Dispute.findAll({
-    // raw: true,
-    where: {
-      [Op.and]: operators
-    }
-  });
-  log(`searchDisputes ${JSON.stringify(params)} -> `, disputes);
-  return disputes;
-}
-
-const getById = async ({id}) => {
-  return (await searchDisputes({id}))[0];
-}
-
+const OPENED_DISPUTE = `SELECT * FROM disputes 
+WHERE "resolved_at" IS NULL AND "chat_id" = $1`;
 const getOpened = async ({chat_id}) => {
-  chat_id = chat_id.toString();
-  const disputes = await Dispute.findAll({
-    where: {
-      [Op.and]: [
-        {
-          chat_id
-        }, {
-          resolved_at: {
-            [Op.is]: null,
-          }
-        }
-      ]
-    }
-  });
-
-  log(`getOpened ${chat_id}`, disputes);
-  return disputes;
+  const result = await db.query(OPENED_DISPUTE, [chat_id]);
+  log(`getOpened ${chat_id}`, result.rows);
+  return result.rows;
 }
 
-// const ADD_DISPUTE = `INSERT INTO disputes (
-//     "title", "expired_at", "chat_id", "message_id", "username"
-// ) VALUES (
-//     $1, $2, $3, $4, $5
-// ) RETURNING *`;
-//
-// const add = async ({title, expired_at, chat_id, message_id, username}) => {
-//   const result = await db.query(ADD_DISPUTE, [
-//     title,
-//     expired_at,
-//     chat_id,
-//     message_id,
-//     username
-//   ]);
-//   log('add -> ', result.rows[0]);
-//   return result.rows[0];
-// };
+const ADD_DISPUTE = `INSERT INTO disputes (
+    "title", "expired_at", "chat_id", "message_id", "username"
+) VALUES (
+    $1, $2, $3, $4, $5
+) RETURNING *`;
+
 const add = async ({title, expired_at, chat_id, message_id, username}) => {
-  const dispute = await Dispute.create({title, expired_at, chat_id, message_id, username});
-  log('add -> ', dispute);
-  return dispute;
+  const result = await db.query(ADD_DISPUTE, [
+    title,
+    expired_at,
+    chat_id,
+    message_id,
+    username
+  ]);
+  log('add -> ', result.rows[0]);
+  return result.rows[0];
 };
 
 const UPDATE_DISPUTE_EXPIRED = `UPDATE disputes
@@ -102,18 +67,6 @@ const save = async ({id, expired_at, message_id}) => {
   return result.rows[0];
 };
 
-// const updateDispute = async ({id, expired_at, message_id}) => {
-const updateDispute = async (params) => {
-  const {id, ...data} = params;
-  const dispute = await Dispute.update({...data}, {
-    where: {
-      id
-    }
-  });
-  log(`updateDispute ${JSON.stringify(params)} -> `, dispute);
-  return dispute;
-};
-
 const UPDATE_DISPUTE_RESOLVE = `UPDATE disputes
 SET
   "resolved_at" = $2
@@ -127,12 +80,8 @@ const resolve = async ({id}) => {
 };
 
 const log = (text, params = '') => {
-  console.log(`[disputes.service] -> ${text}`, JSON.stringify(params, null, 2));
+  console.log(`[disputes.service] -> ${text}`, params);
 };
-
-function getOperators(params) {
-  return Object.entries(params).map(([key, value]) => ({[key]: value.toString()}));
-}
 
 module.exports = {
   add,
@@ -141,7 +90,5 @@ module.exports = {
   resolve,
   getById,
   getByChatId,
-  getOpened,
-  searchDisputes,
-  updateDispute
+  getOpened
 };
