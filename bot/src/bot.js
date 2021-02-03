@@ -60,32 +60,32 @@ bot.onText(/\/disputes/, async (message, match) => {
   const disputes = await disputeService.getOpened({chat_id});
   let index = 1;
   for (const {title, expired_at, id: dispute_id, username, message_id} of disputes) {
-    try {
-      let text = ``;
-      const opts = {
-        parse_mode: "HTML",
-        reply_to_message_id: message_id,
-        reply_markup: JSON.stringify({
-          inline_keyboard: [
-            [
-              {
-                text: 'завершить',
-                callback_data: JSON.stringify({
-                  dispute_id: dispute_id,
-                  action: 'resolve'
-                })
-              },
-            ]
+    const opts = {
+      parse_mode: "HTML",
+      // reply_to_message_id: message_id,
+      reply_markup: JSON.stringify({
+        inline_keyboard: [
+          [
+            {
+              text: 'завершить',
+              callback_data: JSON.stringify({
+                dispute_id: dispute_id,
+                action: 'resolve'
+              })
+            },
           ]
-        })
-      }
-      text += `<b>${index++}.</b> ${generateDisputeTitle({title, username})}`;
-      text += `${await generateDisputeResults({dispute_id})}`;
-      text += `${generateDisputeExpired({expired_at})}`;
-      await bot.sendMessage(chat_id, `${text}`, opts)
+        ]
+      })
+    }
+    let text = ``;
+    text += `<b>${index++}.</b> ${generateDisputeTitle({title, username})}`;
+    text += `${await generateDisputeResults({dispute_id})}`;
+    text += `${generateDisputeExpired({expired_at})}`;
+    try {
+      await bot.sendMessage(chat_id, `${text}`, {...opts, reply_to_message_id: message_id });
     } catch (e) {
       log(`ERROR: `, e.message);
-      await disputeService.resolve({id: dispute_id});
+      await bot.sendMessage(chat_id, `${text}`, opts)
     }
   }
   if (!disputes || disputes.length === 0)
@@ -204,17 +204,17 @@ function formatDate(date) {
 async function resolveDispute({id: dispute_id, title, chat_id, message_id, username}) {
   const opts = {
     parse_mode: "HTML",
-    chat_id: chat_id,
-    reply_to_message_id: message_id,
+    chat_id: chat_id
   };
   let text = ``;
   text += `${generateDisputeTitle({username, title})}`;
   text += `<b>Спор завершен</b>\n`;
   text += await generateDisputeResults({dispute_id});
   try {
-    await bot.sendMessage(chat_id, text, opts);
+    await bot.sendMessage(chat_id, text, {...opts, reply_to_message_id: message_id,});
   } catch(e) {
     log('ERROR: ', e.message);
+    await bot.sendMessage(chat_id, text, opts);
   } finally {
     const dispute = await disputeService.resolve({id: dispute_id});
     await updateDisputeMessage(dispute);
