@@ -1,15 +1,18 @@
 REQUIREMENTS
 - node
 
+BEFORE INSTALL
+- backend/README.md
+
 INSTALL
 
-1. `cd bot && npm i`
-2. `cd backoffice && npm i`
+`npm i`
 
 ENV
 
-Create bot/.env file and add prop:
-`TOKEN=12345677890:AAAAAABBBBBBBBBBCCCCCCDDDDDDDDDEEEE`
+Create bot/.env file and add props:
+`TOKEN=12345677890:AAAAAABBBBBBBBBBCCCCCCDDDDDDDDDEEEE
+NODE_ENV=dev`
 
 RUN
 
