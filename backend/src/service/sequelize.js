@@ -6,7 +6,8 @@ const sequelize = new Sequelize(connectionString, {
   "define": {
     "createdAt": "created_at",
     "updatedAt": "updated_at"
-  } /*don't forget to add host, port, dialect, etc.*/
+  }, /*don't forget to add host, port, dialect, etc.*/
+  logging: false
 }) // Example for postgres
 
 module.exports = sequelize;

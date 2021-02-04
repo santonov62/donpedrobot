@@ -1,4 +1,4 @@
-const DELAY_MINUTES = 4 * 60000;
+const DELAY_MINUTES = 4;
 const disputeService = require('../../backend/src/service/dispute.service');
 const {
   bot,
@@ -13,7 +13,8 @@ function start() {
     } catch (e) {
       log(`ERROR`, e.message);
     }
-  }, DELAY_MINUTES);
+  }, DELAY_MINUTES * 60000);
+  log('STARTED!');
 }
 
 async function check() {
@@ -29,7 +30,6 @@ function log(text, params = '') {
   console.log(`[backgroundChecker] -> ${text}`, params);
 }
 
-log('STARTED!')
 
 module.exports = {
   start

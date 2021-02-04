@@ -2,6 +2,7 @@ process.env["NTBA_FIX_319"] = 1;
 const TelegramBot = require('node-telegram-bot-api');
 const disputeService = require('../../backend/src/service/dispute.service');  //hack
 const answerService = require('../../backend/src/service/answer.service');  //hack
+const phraseService = require('../../backend/src/service/phrase.service');
 const moment = require('moment');
 moment.locale('ru');
 const REQUEST_EXPIRED_AFTER_MINUTES = 0.2;
@@ -29,7 +30,8 @@ bot.onText(/^@don_pedrobot+\b$/, async (message, match) => {
   <b>На баночку что</b> Курс доллара будет расти
   
   Команды:
-  /disputes - Показать список незавершенных споров`, {parse_mode: "HTML"});
+  /disputes - Показать список незавершенных споров
+  /phrase - Показать случайный пост`, {parse_mode: "HTML"});
 });
 
 bot.onText(/([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим|@don_pedrobot),?\s(.+)/, async (message, match) => {
@@ -91,6 +93,11 @@ bot.onText(/\/disputes/, async (message, match) => {
   }
   if (!disputes || disputes.length === 0)
     bot.sendMessage(chat_id, `Ничего нет`, {parse_mode: "HTML"});
+});
+
+bot.onText(/\/phrase/, async (message, match) => {
+  const chat_id = message.chat.id;
+  await sendPhrase({chat_id});
 });
 
 bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
@@ -165,6 +172,21 @@ function sendWhenExpiredDispute({id: dispute_id, chat_id, message_id}) {
       inline_keyboard: _getExpiredButtons({dispute_id})
     })
   });
+}
+
+async function sendPhrase({chat_id, silent}) {
+  const opts = {
+    parse_mode: "HTML",
+    chat_id: chat_id
+  };
+  const phrase = await phraseService.getOnePhrase();
+  if (phrase) {
+    const text = `☝ ${phrase.text} ️`;
+    await bot.sendMessage(chat_id, text, opts);
+    await phraseService.remove(phrase);
+  } else if (!silent) {
+    await bot.sendMessage(chat_id, `Ничего нет`, opts);
+  }
 }
 
 async function generateDisputeResults({dispute_id}) {
@@ -325,5 +347,6 @@ module.exports = {
   generateDisputeTitle,
   generateDisputeResults,
   resolveDispute,
-  updateDisputeMessage
+  updateDisputeMessage,
+  sendPhrase
 }

@@ -17,7 +17,25 @@ async function search() {
 
 }
 
+async function getOnePhrase() {
+  const phrase = (await Phrase.findAll({
+    limit: 1
+  }))[0];
+  log(`search`, phrase);
+  return phrase;
+}
+
+async function remove({id}) {
+  await Phrase.destroy({
+    where: {
+      id
+    }
+  });
+}
+
 module.exports = {
   add,
-  search
+  search,
+  getOnePhrase,
+  remove
 }
