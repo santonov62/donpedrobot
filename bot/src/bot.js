@@ -3,6 +3,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const disputeService = require('../../backend/src/service/dispute.service');  //hack
 const answerService = require('../../backend/src/service/answer.service');  //hack
 const moment = require('moment');
+moment.locale('ru');
 const REQUEST_EXPIRED_AFTER_MINUTES = 0.2;
 
 // replace the value below with the Telegram token you receive from @BotFather
@@ -125,7 +126,7 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
       await updateDisputeMessage(dispute);
     }
     if (action === 'resolve') {
-      await resolveDispute(dispute);
+      await resolveDispute({dispute_id: dispute.id});
       bot.deleteMessage(chat_id, message.message_id);
     }
   } catch (e) {
@@ -145,10 +146,15 @@ async function updateDisputeMessage({id: dispute_id, chat_id, message_id, expire
     })
   }
 
+  const text = await generateDisputeMessage({username, title, dispute_id, expired_at, resolved_at});
+  await bot.editMessageText(text, opts);
+}
+
+async function generateDisputeMessage({username, title, dispute_id, expired_at, resolved_at}) {
   let text = await generateDisputeTitle({username, title});
   text += await generateDisputeResults({dispute_id});
   text += await generateDisputeExpired({expired_at, resolved_at});
-  await bot.editMessageText(text, opts);
+  return text;
 }
 
 function sendWhenExpiredDispute({id: dispute_id, chat_id, message_id}) {
@@ -189,7 +195,7 @@ function generateDisputeTitle({username, title}) {
 
 function generateDisputeExpired({expired_at, resolved_at}) {
   if (!!resolved_at)
-    return `Завершен <b>${productionDayOffset(resolved_at).format('MMMM Do YYYY, h:mm')}</b>`;
+    return `Завершен <b>${productionDayOffset(resolved_at).format('Do MMMM YYYY, HH:mm')}</b>`;
   return expired_at ? `Дата завершения: <b>${formatDate(expired_at)}</b>\n` : '';
 }
 
@@ -201,22 +207,21 @@ function formatDate(date) {
   return productionDayOffset(date).calendar();
 }
 
-async function resolveDispute({id: dispute_id, title, chat_id, message_id, username}) {
+async function resolveDispute({dispute_id}) {
+  const dispute = await disputeService.resolve({id: dispute_id});
+  const {title, chat_id, message_id, username, expired_at, resolved_at} = dispute;
   const opts = {
     parse_mode: "HTML",
     chat_id: chat_id
   };
-  let text = ``;
-  text += `${generateDisputeTitle({username, title})}`;
-  text += `<b>Спор завершен</b>\n`;
-  text += await generateDisputeResults({dispute_id});
+  let text = `<b>Спор завершен</b>\n`;
+  text += await generateDisputeMessage({username, title, dispute_id, expired_at, resolved_at});
   try {
     await bot.sendMessage(chat_id, text, {...opts, reply_to_message_id: message_id,});
   } catch(e) {
     log('ERROR: ', e.message);
     await bot.sendMessage(chat_id, text, opts);
   } finally {
-    const dispute = await disputeService.resolve({id: dispute_id});
     await updateDisputeMessage(dispute);
     bot.unpinChatMessage(chat_id, {message_id});
   }
