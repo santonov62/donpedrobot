@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
-import {Form, Container, TextArea} from 'semantic-ui-react';
-import {addPhrase, fetchPhrases} from './phraseSlice';
+import React, { useState, useEffect } from 'react';
+import {Form, Container, TextArea, Segment, Dimmer, Loader, Item} from 'semantic-ui-react';
+import {addPhrase, selectPhrases, selectLoading, fetchPhrases} from './phraseSlice';
 import { useSelector, useDispatch } from 'react-redux';
 
 export function Phrase() {
-  const phrases = useSelector(fetchPhrases);
+  const phrases = useSelector(selectPhrases);
+  const isLoading = useSelector(selectLoading);
   const dispatch = useDispatch();
   const [text, setText] = useState('');
+
+  useEffect(() => {
+    dispatch(fetchPhrases());
+  }, []);
 
   function onSubmit() {
     dispatch(addPhrase({text}));
@@ -15,6 +20,9 @@ export function Phrase() {
 
   return (
       <Container>
+        {isLoading &&
+          <Loader active size='big'>Loading</Loader>
+        }
         <Form>
           <Form.TextArea
               label='Phrase'
@@ -23,7 +31,8 @@ export function Phrase() {
               placeholder='Write here some text...'/>
           <Form.Button onClick={onSubmit}>Submit</Form.Button>
         </Form>
-        <div>Phrases: {phrases}</div>
+        {!isLoading && phrases.map(({text}) => (<Segment>{text}</Segment>))
+        }
       </Container>
   )
 }
