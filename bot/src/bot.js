@@ -97,7 +97,7 @@ bot.onText(/\/disputes/, async (message, match) => {
 
 bot.onText(/\/phrase/, async (message, match) => {
   const chat_id = message.chat.id;
-  await sendPhrase({chat_id});
+  await sendPhrase({chat_ids: chat_id, isBotCommand: true});
 });
 
 bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
@@ -174,19 +174,19 @@ function sendWhenExpiredDispute({id: dispute_id, chat_id, message_id}) {
   });
 }
 
-async function sendPhrase({chat_id, silent}) {
+async function sendPhrase({chat_ids, isBotCommand}) {
   const opts = {
-    parse_mode: "HTML",
-    chat_id: chat_id
+    parse_mode: "HTML"
   };
   const phrase = await phraseService.getOnePhrase();
-  if (phrase) {
-    const text = `☝ ${phrase.text} ️`;
-    await bot.sendMessage(chat_id, text, opts);
-    await phraseService.remove(phrase);
-  } else if (!silent) {
-    await bot.sendMessage(chat_id, `Ничего нет`, opts);
+  for (const chat_id of [].concat(chat_ids)) {
+    if (phrase) {
+      await bot.sendMessage(chat_id, `☝ ${phrase.text} ️`, opts);
+    } else if (isBotCommand) {
+      await bot.sendMessage(chat_id, `Ничего нет`, opts);
+    }
   }
+  phrase && await phraseService.remove(phrase);
 }
 
 async function generateDisputeResults({dispute_id}) {
@@ -348,5 +348,6 @@ module.exports = {
   generateDisputeResults,
   resolveDispute,
   updateDisputeMessage,
-  sendPhrase
+  sendPhrase,
+  productionDayOffset
 }

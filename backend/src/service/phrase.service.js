@@ -19,6 +19,9 @@ async function search() {
 
 async function getOnePhrase() {
   const phrase = (await Phrase.findAll({
+    order: [
+      ['created_at', 'ASC'],
+    ],
     limit: 1
   }))[0];
   log(`search`, phrase);
