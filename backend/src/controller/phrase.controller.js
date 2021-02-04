@@ -4,8 +4,8 @@ const phraseService = require('../service/phrase.service');
 
 async function add(req, res) {
   try {
-    const {text} = req.body;
     console.group('[phrase.controller] -> add');
+    const {text} = req.body;
     const phrase = await phraseService.add({text});
     res.json(phrase);
   } catch (e) {

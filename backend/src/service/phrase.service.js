@@ -7,6 +7,7 @@ const log = (text, params = '') => {
 async function add({text}) {
   const phrase = await Phrase.create({ text });
   log(`add`, phrase);
+  return phrase;
 }
 
 async function search() {

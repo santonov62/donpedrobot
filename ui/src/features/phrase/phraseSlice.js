@@ -11,7 +11,8 @@ export const phraseSlice = createSlice({
       state.isLoading = true;
     },
     add: (state, action) => {
-      state.value = state.value.concat(action.payload);
+      const phrase = action.payload;
+      state.value = state.value.concat(phrase);
       state.isLoading = false;
     }
   }
@@ -19,9 +20,17 @@ export const phraseSlice = createSlice({
 
 const { add, loading } = phraseSlice.actions;
 
-export const addPhrase = ({text}) => dispatch => {
+export const addPhrase = ({text}) => async dispatch => {
   dispatch(loading());
-  dispatch(add({text}));
+  const url = `${window.location.origin}/phrase`
+  const phrase = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({text})
+  }).then(res => res.json());
+  dispatch(add(phrase));
 }
 
 export const fetchPhrases = () => async dispatch => {
