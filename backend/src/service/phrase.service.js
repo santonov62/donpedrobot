@@ -9,6 +9,14 @@ async function add({text}) {
   log(`add`, phrase);
 }
 
+async function search() {
+  const phrases = await Phrase.findAll();
+  log(`search`, phrases);
+  return phrases
+
+}
+
 module.exports = {
-  add
+  add,
+  search
 }

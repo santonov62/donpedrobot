@@ -24,9 +24,16 @@ export const addPhrase = ({text}) => dispatch => {
   dispatch(add({text}));
 }
 
-export const fetchPhrases = (phrase) => dispatch => {
+export const fetchPhrases = () => async dispatch => {
   dispatch(loading());
-  dispatch(add({'text': 1111}));
+  const url = `${window.location.origin}/phrase`
+  const phrases = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }).then(res => res.json()) || [];
+  dispatch(add(phrases));
 }
 
 export const selectPhrases = state => {

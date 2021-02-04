@@ -10,6 +10,20 @@ async function add(req, res) {
     res.json(phrase);
   } catch (e) {
     log(`ERROR: `, e.message);
+    res.status(500).json({error:e.message})
+  } finally {
+    console.groupEnd();
+  }
+}
+
+async function all(req, res) {
+  try {
+    console.group('[phrase.controller] -> all');
+    const phrases = await phraseService.search();
+    res.json(phrases);
+  } catch (e) {
+    log(`ERROR: `, e.message);
+    res.status(500).json({error:e.message})
   } finally {
     console.groupEnd();
   }
@@ -20,5 +34,6 @@ function log (text, obj = '') {
 }
 
 app.post('/', add);
+app.get('/', all);
 
 module.exports = app;
