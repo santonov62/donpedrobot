@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "./node_modules/.bin/nf start",
-    "postinstall": "cd bot && npm install && cd ../backend && npm install && npm run db-latest",
+    "postinstall": "cd bot && npm install && cd ../ui && npm install && cd ../backend && npm install && npm run db-latest",
+    "heroku-postbuild": "cd ui && npm run build-ui",
     "deploy-dev-to-heroku": "git push heroku dev:main && heroku logs --tail",
     "merge-dev-to-main": "git checkout main && git merge dev && git push && git checkout dev"
   },
@@ -19,6 +20,6 @@
     "nodemon": "^2.0.7"
   },
   "engines": {
-    "node": "9.2.x"
+    "node": "10.23.x"
   }
 }
