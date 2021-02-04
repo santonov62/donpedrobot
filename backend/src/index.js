@@ -8,9 +8,12 @@ const phraseController = require('./controller/phrase.controller');
 app.use(bodyParser.json());
 app.use('/pay', payController);
 app.use('/phrase', phraseController);
-app.get('/', (req, res) => {
-  res.send('I\'m don pedrobot and i\'m happy!')
-});
+
+app.use('/', express.static(__dirname + '../../../ui/build'));
+
+// app.get('/', (req, res) => {
+//   res.send('I\'m don pedrobot and i\'m happy!')
+// });
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)
