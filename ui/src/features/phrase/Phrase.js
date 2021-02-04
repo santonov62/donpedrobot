@@ -31,7 +31,8 @@ export function Phrase() {
               placeholder='Write here some text...'/>
           <Form.Button onClick={onSubmit}>Submit</Form.Button>
         </Form>
-        {!isLoading && phrases.map(({text}) => (<Segment>{text}</Segment>))
+        {!isLoading &&
+          phrases.map(({id, text}) => (<Segment key={id}>{text}</Segment>))
         }
       </Container>
   )
