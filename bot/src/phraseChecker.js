@@ -22,8 +22,8 @@ function start() {
 async function post() {
   const format = 'hh:mm:ss'
   const time = moment(productionDayOffset(moment()), format),
-      beforeTime = moment('09:00:00', format),
-      afterTime = moment('09:40:00', format);
+      beforeTime = moment('08:00:00', format),
+      afterTime = moment('08:40:00', format);
 
   if (time.isBetween(beforeTime, afterTime)) {
     await sendPhrase({chat_ids: chat_ids.split(',')});
