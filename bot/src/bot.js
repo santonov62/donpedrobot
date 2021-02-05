@@ -244,7 +244,7 @@ function productionDayOffset(date) {
 }
 
 function formatDate(date) {
-  return productionDayOffset(date).calendar();
+  return productionDayOffset(date).format('Do MMMM YYYY, HH:mm');
 }
 
 async function resolveDispute({dispute_id}) {
