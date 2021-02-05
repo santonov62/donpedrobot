@@ -66,19 +66,19 @@ bot.onText(/\/disputes/, async (message, match) => {
     const opts = {
       parse_mode: "HTML",
       // reply_to_message_id: message_id,
-      reply_markup: JSON.stringify({
-        inline_keyboard: [
-          [
-            {
-              text: 'завершить',
-              callback_data: JSON.stringify({
-                dispute_id: dispute_id,
-                action: 'resolve'
-              })
-            },
-          ]
-        ]
-      })
+      // reply_markup: JSON.stringify({
+      //   inline_keyboard: [
+      //     [
+      //       {
+      //         text: 'завершить',
+      //         callback_data: JSON.stringify({
+      //           dispute_id: dispute_id,
+      //           action: 'resolve'
+      //         })
+      //       },
+      //     ]
+      //   ]
+      // })
     }
     let text = ``;
     text += `<b>${index++}.</b> ${generateDisputeTitle({title, username})}`;
@@ -123,18 +123,17 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
         chat_id: chat_id,
         message_id: message.message_id,
       };
-      // const expired_at = moment.unix(value);
       const [count, type] = value.split('_');
       const expired_at = moment().add(count, type);
       dispute = await disputeService.save({...dispute, expired_at});
-      // let text = `${message.text}\n`;
-      const text = `@${username} установил дату завершения спора <b>${formatDate(expired_at)}</b>\n`;
-      await bot.editMessageText(text, opts);
+      // const text = `@${username} установил дату завершения спора <b>${formatDate(expired_at)}</b>\n`;
+      // await bot.editMessageText(text, opts);
+      bot.deleteMessage(chat_id, message.message_id);
       await updateDisputeMessage(dispute);
     }
     if (action === 'resolve') {
       await resolveDispute({dispute_id: dispute.id});
-      bot.deleteMessage(chat_id, message.message_id);
+      // bot.deleteMessage(chat_id, message.message_id);
     }
   } catch (e) {
     log(`ERROR: `, e.message);
@@ -144,9 +143,10 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
 async function createDispute({title, username, chat_id}) {
   if (!title)
     return;
-  const text = generateDisputeTitle({username, title});
+  let text = generateDisputeTitle({username, title});
 
-  let dispute = await disputeService.add({title, chat_id, username});
+  const expired_at = moment().add(10, 'minutes');
+  let dispute = await disputeService.add({title, chat_id, username, expired_at});
   const opts = {
     parse_mode: "HTML",
     reply_markup: JSON.stringify({
@@ -154,6 +154,7 @@ async function createDispute({title, username, chat_id}) {
     })
   };
 
+  // text += await generateDisputeExpired({expired_at});
   const {message_id} = await bot.sendMessage(chat_id, `${text}`, opts);
   dispute = await disputeService.save({ ...dispute, message_id});
   sendWhenExpiredDispute(dispute);
@@ -291,6 +292,15 @@ function _getDisputeButtons({dispute_id}) {
           dispute_id: dispute_id,
           action: 'answer',
           value: "no"
+        })
+      },
+    ],
+    [
+      {
+        text: 'завершить',
+        callback_data: JSON.stringify({
+          dispute_id: dispute_id,
+          action: 'resolve'
         })
       },
     ]
