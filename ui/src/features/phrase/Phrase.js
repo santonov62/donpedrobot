@@ -33,7 +33,7 @@ export function Phrase() {
           <Form.Button onClick={onSubmit}>Submit</Form.Button>
         </Form>
         {!isLoading &&
-        phrases.map(({id, text}) => (<Segment key={id}><pre>{text}</pre></Segment>))
+        phrases.map(({id, text}) => (<Segment key={id}>{text}</Segment>))
         }
       </Container>
   )
