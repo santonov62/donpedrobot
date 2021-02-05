@@ -17,6 +17,9 @@ if (!token)
 const bot = new TelegramBot(token, {polling: true});
 
 bot.onText(/^@don_pedrobot+\b$/, async (message, match) => {
+  if (!!message.reply_to_message)
+    return;
+
   const chatId = message.chat.id;
   bot.sendMessage(chatId, `
   Я бот помогаю спорить. Напиши <b>"Спорим"</b> или обратись ко мне @don_pedrobot и через пробел укажи тему. 
