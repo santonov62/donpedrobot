@@ -15,7 +15,7 @@
     "semantic-ui-react": "^0.83.0"
   },
   "scripts": {
-    "start-ui": "react-scripts start",
+    "dev-ui": "react-scripts start",
     "build-ui": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

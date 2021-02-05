@@ -27,12 +27,13 @@ export function Phrase() {
           <Form.TextArea
               label='Phrase'
               value={text}
+              rows={15}
               onChange={e => setText(e.target.value)}
               placeholder='Write here some text...'/>
           <Form.Button onClick={onSubmit}>Submit</Form.Button>
         </Form>
         {!isLoading &&
-          phrases.map(({id, text}) => (<Segment key={id}>{text}</Segment>))
+        phrases.map(({id, text}) => (<Segment key={id}><pre>{text}</pre></Segment>))
         }
       </Container>
   )
