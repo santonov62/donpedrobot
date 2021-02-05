@@ -34,28 +34,25 @@ bot.onText(/^@don_pedrobot+\b$/, async (message, match) => {
   /phrase - Показать случайный пост`, {parse_mode: "HTML"});
 });
 
-bot.onText(/([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим|@don_pedrobot),?\s(.+)/, async (message, match) => {
+bot.onText(/(?![Сс]порим что нет|[Сс]порим нет)([Сс]порим на баночку|[Нн]а баночку что|[Нн]а баночку|[Сс]порим что|[Сс]порим|@don_pedrobot),?\s(.+)/, async (message, match) => {
   const { from } = message;
   const chat_id = message.chat.id;
   const title = match[2];
   const username = _getUserName(from);
-  if (!title)
-    return;
-  const text = generateDisputeTitle({username, title});
-
-  let dispute = await disputeService.add({title, chat_id, username});
-  const opts = {
-    parse_mode: "HTML",
-    reply_markup: JSON.stringify({
-      inline_keyboard: _getDisputeButtons({dispute_id: dispute.id})
-    })
-  };
-
-  const {message_id} = await bot.sendMessage(chat_id, `${text}`, opts);
-  dispute = await disputeService.save({ ...dispute, message_id});
-  sendWhenExpiredDispute(dispute);
-  bot.pinChatMessage(chat_id, message_id,{disable_notification: true});
+  await createDispute({chat_id, title, username});
 });
+
+bot.onText(/([Сс]порим на баночку|[Нн]а баночку|[Бб]аночка|[Сс]порим что нет|[Сс]порим нет|[Сс]порим|@don_pedrobot)[?!]?$/, async (message, match) => {
+  const {reply_to_message} = message;
+  if (!reply_to_message)
+    return;
+  const {from} = message;
+  const chat_id = message.chat.id;
+  const {text: title, message_id} = reply_to_message;
+  const username = _getUserName(from);
+  await createDispute({chat_id, title, username});
+});
+
 
 bot.onText(/\/disputes/, async (message, match) => {
   const { from } = message;
@@ -141,6 +138,25 @@ bot.on('callback_query', async function onCallbackQuery(callbackQuery) {
   }
 });
 
+async function createDispute({title, username, chat_id}) {
+  if (!title)
+    return;
+  const text = generateDisputeTitle({username, title});
+
+  let dispute = await disputeService.add({title, chat_id, username});
+  const opts = {
+    parse_mode: "HTML",
+    reply_markup: JSON.stringify({
+      inline_keyboard: _getDisputeButtons({dispute_id: dispute.id})
+    })
+  };
+
+  const {message_id} = await bot.sendMessage(chat_id, `${text}`, opts);
+  dispute = await disputeService.save({ ...dispute, message_id});
+  sendWhenExpiredDispute(dispute);
+  bot.pinChatMessage(chat_id, message_id,{disable_notification: true});
+}
+
 async function updateDisputeMessage({id: dispute_id, chat_id, message_id, expired_at, title, username, resolved_at}) {
   const opts = {
     parse_mode: "HTML",
@@ -153,11 +169,11 @@ async function updateDisputeMessage({id: dispute_id, chat_id, message_id, expire
     })
   }
 
-  const text = await generateDisputeMessage({username, title, dispute_id, expired_at, resolved_at});
+  const text = await generateDisputeText({username, title, dispute_id, expired_at, resolved_at});
   await bot.editMessageText(text, opts);
 }
 
-async function generateDisputeMessage({username, title, dispute_id, expired_at, resolved_at}) {
+async function generateDisputeText({username, title, dispute_id, expired_at, resolved_at}) {
   let text = await generateDisputeTitle({username, title});
   text += await generateDisputeResults({dispute_id});
   text += await generateDisputeExpired({expired_at, resolved_at});
@@ -175,18 +191,20 @@ function sendWhenExpiredDispute({id: dispute_id, chat_id, message_id}) {
 }
 
 async function sendPhrase({chat_ids, isBotCommand}) {
+  const chat_id = chat_ids.toString();
   const opts = {
     parse_mode: "HTML"
   };
   const phrase = await phraseService.getOnePhrase();
-  for (const chat_id of [].concat(chat_ids)) {
+  // for (const chat_id of [].concat(chat_ids)) {
     if (phrase) {
       await bot.sendMessage(chat_id, `☝ ${phrase.text} ️`, opts);
+      await phraseService.remove(phrase);
     } else if (isBotCommand) {
       await bot.sendMessage(chat_id, `Ничего нет`, opts);
     }
-  }
-  phrase && await phraseService.remove(phrase);
+  // }
+  // phrase && await phraseService.remove(phrase);
 }
 
 async function generateDisputeResults({dispute_id}) {
@@ -237,7 +255,7 @@ async function resolveDispute({dispute_id}) {
     chat_id: chat_id
   };
   let text = `<b>Спор завершен</b>\n`;
-  text += await generateDisputeMessage({username, title, dispute_id, expired_at, resolved_at});
+  text += await generateDisputeText({username, title, dispute_id, expired_at, resolved_at});
   try {
     await bot.sendMessage(chat_id, text, {...opts, reply_to_message_id: message_id,});
   } catch(e) {
