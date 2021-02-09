@@ -1,6 +1,6 @@
 const { bot, sendPhrase, productionDayOffset } = require('./bot');
 const moment = require('moment');
-const DELAY_MINUTES = 30;
+const DELAY_MINUTES = 25;
 const chat_ids = process.env.CHAT_ID;
 
 function start() {
@@ -23,7 +23,7 @@ async function post() {
   const format = 'hh:mm:ss'
   const time = moment(productionDayOffset(moment()), format),
       beforeTime = moment('08:00:00', format),
-      afterTime = moment('08:40:00', format);
+      afterTime = moment('08:30:00', format);
 
   if (time.isBetween(beforeTime, afterTime)) {
     await sendPhrase({chat_ids: chat_ids.split(',')});

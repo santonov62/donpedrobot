@@ -295,15 +295,15 @@ function _getDisputeButtons({dispute_id}) {
         })
       },
     ],
-    [
-      {
-        text: 'завершить',
-        callback_data: JSON.stringify({
-          dispute_id: dispute_id,
-          action: 'resolve'
-        })
-      },
-    ]
+    // [
+    //   {
+    //     text: 'завершить',
+    //     callback_data: JSON.stringify({
+    //       dispute_id: dispute_id,
+    //       action: 'resolve'
+    //     })
+    //   },
+    // ]
   ]
 }
 
