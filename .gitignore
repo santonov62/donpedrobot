@@ -3,3 +3,5 @@
 **.iml
 package-lock.json
 .env
+yarn.lock
+.vscode
