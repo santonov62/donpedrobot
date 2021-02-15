@@ -1,5 +1,8 @@
 const db = require('./db.service');
 const moment = require('moment');
+const Dispute = require('../model/dispute.model');
+const Answer = require('../model/answer.model');
+const { Op } = require("sequelize");
 
 const EXPIRED_DISPUTES = `SELECT * FROM disputes 
 WHERE "expired_at" < $1 
@@ -12,6 +15,7 @@ const getExpired = async () => {
   return result.rows;
 }
 
+// Deprecated
 const DISPUTE_BY_ID = `SELECT * FROM disputes 
 WHERE "id" = $1`;
 const getById = async ({id}) => {
@@ -43,6 +47,8 @@ const ADD_DISPUTE = `INSERT INTO disputes (
 ) RETURNING *`;
 
 const add = async ({title, expired_at, chat_id, message_id, username}) => {
+  if (!title)
+    throw new Error(`title required!`)
   const result = await db.query(ADD_DISPUTE, [
     title,
     expired_at,
@@ -83,6 +89,41 @@ const log = (text, params = '') => {
   console.log(`[disputes.service] -> ${text}`, params);
 };
 
+async function byId ({id}) {
+  const dispute = (await Dispute.findAll({
+    where: {
+      id: id
+    }
+  }))[0];
+  log(`byId`, dispute);
+  return dispute;
+}
+
+async function getAwaitingResults() {
+  const disputes = await Dispute.findAll({
+    where: {
+      win_answer: {
+        [Op.is]: null
+      }
+    }
+  });
+  log(`getAwaitingResults`, disputes);
+  return disputes;
+}
+
+async function remove({id}) {
+  await Answer.destroy({
+    where: {
+      dispute_id: id
+    }
+  })
+  await Dispute.destroy({
+    where: {
+      id
+    }
+  });
+}
+
 module.exports = {
   add,
   save,
@@ -90,5 +131,8 @@ module.exports = {
   resolve,
   getById,
   getByChatId,
-  getOpened
+  getOpened,
+  getAwaitingResults,
+  byId,
+  remove
 };
