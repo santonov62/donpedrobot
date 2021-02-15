@@ -1,5 +1,6 @@
 const db = require('./db.service');
 const moment = require('moment');
+const Phrase = require('../model/phrase.model');
 
 const EXPIRED_DISPUTES = `SELECT * FROM disputes 
 WHERE "expired_at" < $1 
@@ -12,6 +13,7 @@ const getExpired = async () => {
   return result.rows;
 }
 
+// Deprecated
 const DISPUTE_BY_ID = `SELECT * FROM disputes 
 WHERE "id" = $1`;
 const getById = async ({id}) => {
@@ -83,6 +85,16 @@ const log = (text, params = '') => {
   console.log(`[disputes.service] -> ${text}`, params);
 };
 
+async function byId ({id}) {
+  const dispute = (await Phrase.findAll({
+    where: {
+      id: id
+    }
+  }))[0];
+  log(`byId`, dispute);
+  return dispute;
+}
+
 module.exports = {
   add,
   save,
@@ -90,5 +102,6 @@ module.exports = {
   resolve,
   getById,
   getByChatId,
-  getOpened
+  getOpened,
+  byId
 };

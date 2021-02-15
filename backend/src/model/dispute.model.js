@@ -9,6 +9,9 @@ const Dispute = sequelize.define('dispute', {
   message_id: {
     type: DataTypes.STRING
   },
+  win_answer: {
+    type: DataTypes.STRING
+  },
   chat_id: {
     type: DataTypes.STRING
   },
