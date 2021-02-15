@@ -14,11 +14,18 @@ export const phraseSlice = createSlice({
       const phrase = action.payload;
       state.value = state.value.concat(phrase);
       state.isLoading = false;
+    },
+    clear: (state) => {
+      state.value = [];
+    },
+    loaded: (state, action) => {
+      state.value = action.payload;
+      state.isLoading = false;
     }
   }
 });
 
-const { add, loading } = phraseSlice.actions;
+const { add, loading, clear, loaded } = phraseSlice.actions;
 
 export const addPhrase = ({text}) => async dispatch => {
   dispatch(loading());
@@ -42,7 +49,7 @@ export const fetchPhrases = () => async dispatch => {
       'Content-Type': 'application/json'
     }
   }).then(res => res.json()) || [];
-  dispatch(add(phrases));
+  dispatch(loaded(phrases));
 }
 
 export const selectPhrases = state => {
