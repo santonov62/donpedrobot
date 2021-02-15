@@ -8,7 +8,7 @@ function start() {
     log('WARN!', 'process.env.CHAT_ID required!');
     return;
   }
-  post();
+  // post();
   setInterval(async () => {
     try {
       await post();
