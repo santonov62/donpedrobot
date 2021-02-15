@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {Form, Container, TextArea, Segment, Dimmer, Loader, Item} from 'semantic-ui-react';
-import {addPhrase, selectPhrases, selectLoading, fetchPhrases} from './phraseSlice';
+import {addPhrase, selectPhrases, selectLoading, fetchPhrases, fetchAll} from './phraseSlice';
 import { useSelector, useDispatch } from 'react-redux';
 
 export function Phrase() {

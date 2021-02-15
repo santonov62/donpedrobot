@@ -1,5 +1,5 @@
 const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = require('./db')
+const sequelize = require('../service/sequelize');
 
 const Dispute = sequelize.define('dispute', {
   // Model attributes are defined here
@@ -13,6 +13,9 @@ const Dispute = sequelize.define('dispute', {
     type: DataTypes.STRING
   },
   chat_id: {
+    type: DataTypes.STRING
+  },
+  username: {
     type: DataTypes.STRING
   },
   resolved_at: {

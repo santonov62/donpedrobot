@@ -10,7 +10,7 @@ async function add(req, res) {
     res.json(phrase);
   } catch (e) {
     log(`ERROR: `, e.message);
-    res.status(500).json({error:e.message})
+    res.status(500).json(e.message)
   } finally {
     console.groupEnd();
   }
@@ -23,7 +23,7 @@ async function all(req, res) {
     res.json(phrases);
   } catch (e) {
     log(`ERROR: `, e.message);
-    res.status(500).json({error:e.message})
+    res.status(500).json(e.message)
   } finally {
     console.groupEnd();
   }

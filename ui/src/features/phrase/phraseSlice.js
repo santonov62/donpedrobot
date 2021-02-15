@@ -18,26 +18,34 @@ export const phraseSlice = createSlice({
     clear: (state) => {
       state.value = [];
     },
-    loaded: (state, action) => {
+    fetchAll: (state, action) => {
       state.value = action.payload;
+      state.isLoading = false;
+    },
+    loaded: (state, action) => {
       state.isLoading = false;
     }
   }
 });
 
-const { add, loading, clear, loaded } = phraseSlice.actions;
+const { add, loading, clear, loaded, fetchAll } = phraseSlice.actions;
 
 export const addPhrase = ({text}) => async dispatch => {
-  dispatch(loading());
-  const url = `${window.location.origin}/phrase`
-  const phrase = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({text})
-  }).then(res => res.json());
-  dispatch(add(phrase));
+  try {
+    dispatch(loading());
+    const url = `${window.location.origin}/phrase`
+    const phrase = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({text})
+    }).then(res => res.json());
+    if (phrase.text)
+      dispatch(add(phrase));
+  } finally {
+    dispatch(loaded());
+  }
 }
 
 export const fetchPhrases = () => async dispatch => {
@@ -49,7 +57,7 @@ export const fetchPhrases = () => async dispatch => {
       'Content-Type': 'application/json'
     }
   }).then(res => res.json()) || [];
-  dispatch(loaded(phrases));
+  dispatch(fetchAll(phrases));
 }
 
 export const selectPhrases = state => {

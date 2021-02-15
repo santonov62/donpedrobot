@@ -5,6 +5,8 @@ const log = (text, params = '') => {
 };
 
 async function add({text}) {
+  if (!text)
+    throw new Error(`text required!`);
   const phrase = await Phrase.create({ text });
   log(`add`, phrase);
   return phrase;
